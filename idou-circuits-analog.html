@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>idou circuits · αναλογικά</title>
+<style>
+:root{
+  --bg:#f4f6fa; --panel:#ffffff; --text:#1d2433; --muted:#5b6475; --line:#d5dbe5;
+  --accent:#1f5fbf; --accent-soft:#e3edfb; --one:#e8411f; --zero:#8a94a6;
+  --ok:#1e8e3e; --ok-soft:#e3f4e8; --bad:#c62828; --bad-soft:#fdeaea; --warn-soft:#fff4e0; --chip:#eef1f6;
+  --grid:#e6eaf1; --gate:#ffffff; --stroke:#1d2433; --flow:#f5b301; --lcd:#14261a; --lcdt:#7dff9e;
+}
+body.dark{
+  --bg:#121721; --panel:#1b2230; --text:#e6eaf2; --muted:#9aa4b6; --line:#2e3746;
+  --accent:#6ea8ff; --accent-soft:#22324d; --one:#ff6a4a; --zero:#6f7a8d;
+  --ok:#5fd17f; --ok-soft:#1c3324; --bad:#ff7b7b; --bad-soft:#3a2024; --warn-soft:#3a3020; --chip:#263042;
+  --grid:#202939; --gate:#1b2230; --stroke:#e6eaf2; --flow:#ffd54a; --lcd:#0b140e; --lcdt:#7dff9e;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--text);font-family:Calibri,Carlito,"Segoe UI",Arial,sans-serif;font-size:16px}
+.wrap{height:100vh;display:flex;flex-direction:column;padding:8px 14px;gap:7px;max-width:1700px;margin:0 auto}
+header{display:flex;align-items:center;gap:14px}
+header .titles{flex:1;min-width:0}
+h1{font-size:23px;margin:0;line-height:1.15}
+h1 .h1sub{font-weight:normal;font-size:.72em;color:var(--muted)}
+.subtitle{color:var(--muted);font-size:14px;margin-top:1px}
+a.back{color:var(--accent);text-decoration:none;font-size:15px;white-space:nowrap}
+button{font-family:inherit;font-size:15px;cursor:pointer;border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:8px;padding:5px 11px}
+button:hover:not(:disabled){border-color:var(--accent)}
+button:disabled{opacity:.45;cursor:default}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:bold}
+body.dark button.primary{color:#0d1420}
+button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+body.dark button.on{color:#0d1420}
+#themeBtn{min-width:150px}
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.spacer{flex:1}
+button.ico{font-size:19px;padding:1px 9px;line-height:1.2}
+main{flex:1;min-height:0;display:grid;grid-template-columns:118px 1fr 330px;gap:10px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;min-height:0}
+/* palette */
+#palette{padding:6px;display:flex;flex-direction:column;gap:5px;overflow:auto}
+#palette .ph{font-size:12px;color:var(--muted);font-weight:bold;text-align:center;margin-top:2px}
+.pi{border:1px solid var(--line);border-radius:8px;background:var(--bg);display:flex;flex-direction:column;align-items:center;padding:2px 0 1px;cursor:grab;user-select:none;touch-action:none}
+.pi:hover{border-color:var(--accent)}
+.pi svg{width:72px;height:32px;pointer-events:none}
+.pirow{display:flex;gap:4px}.pirow .pi{flex:1}.pirow .pi svg{width:46px}
+@media (max-height:700px){ .pi svg{height:27px} #palette{gap:3px} }
+.pi span{font-size:12px;font-weight:bold;color:var(--muted);line-height:1.1}
+/* canvas */
+#canvasBox{display:flex;flex-direction:column;overflow:hidden}
+#drawArea{position:relative;flex:1;min-height:0;overflow:hidden}
+#statusBar{flex:0 0 40px;display:flex;align-items:center;gap:8px;padding:0 12px;border-top:1px solid var(--line);font-size:14px;line-height:1.25;overflow:hidden;border-radius:0 0 10px 10px}
+#statusBar.warn{background:var(--warn-soft);border-top-color:#d9a400}
+#statusBar.bad{background:var(--bad-soft);border-top-color:var(--bad)}
+#statusBar .ic{font-size:17px;flex:0 0 auto}
+#msg{display:none;align-items:center;gap:8px}
+#msg.show{display:flex}
+#msg.bad{color:var(--bad);font-weight:bold}
+#msg .t,#hintTip{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+#hintTip{font-size:13px;color:var(--muted)}
+#cv{width:100%;height:100%;display:block;touch-action:none;user-select:none}
+#titleIn{position:absolute;left:10px;top:9px;width:min(340px,60%);font:inherit;font-size:18px;font-weight:bold;color:var(--text);background:transparent;border:1px dashed transparent;border-radius:7px;padding:3px 8px}
+#titleIn:hover{border-color:var(--line)}
+#titleIn:focus{outline:none;border:1px solid var(--accent);background:var(--panel)}
+#titleIn::placeholder{color:var(--muted);font-weight:normal;opacity:.8}
+.ghost{position:fixed;pointer-events:none;z-index:50;opacity:.85}
+.ghost svg{width:96px;height:60px}
+#props{position:absolute;left:10px;bottom:8px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:5px 9px;font-size:14px;display:none;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(0,0,0,.12);flex-wrap:wrap;max-width:calc(100% - 20px)}
+#props.show{display:flex}
+#props b{color:var(--muted)}
+#props button{padding:2px 9px;font-weight:bold}
+#props input{font:inherit;font-size:15px;width:80px;padding:3px 6px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--text)}
+#props input.bad{border-color:var(--bad);background:var(--bad-soft)}
+#props .note{color:var(--muted);font-size:12px}
+#props .cdot{display:inline-block;width:12px;height:12px;border-radius:50%;border:1px solid var(--stroke);vertical-align:-1px;margin-right:3px}
+/* svg classes */
+.gbody{fill:var(--gate);stroke:var(--stroke);stroke-width:2.2}
+.gline{fill:none;stroke:var(--stroke);stroke-width:2.2;stroke-linejoin:round}
+.lead{stroke:var(--stroke);stroke-width:2.2}
+.clabel{fill:var(--text);font-size:14px;font-weight:bold;dominant-baseline:central}
+.cval{fill:var(--muted);font-size:13px;font-weight:bold;dominant-baseline:central}
+.term{fill:var(--panel);stroke:var(--stroke);stroke-width:1.6}
+.term.hot,.termhit:hover+.term{stroke:var(--accent);stroke-width:3}
+.termhit{fill:transparent;cursor:crosshair}
+.hitbox{fill:transparent;cursor:move}
+.selbox{fill:none;stroke:none}
+.sel .selbox{stroke:var(--accent);stroke-width:1.6;stroke-dasharray:5 4}
+.wire{fill:none;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round}
+.wire.selw{stroke:var(--accent)!important;stroke-width:5}
+.halo{fill:none;stroke:var(--panel);stroke-width:9;stroke-linejoin:round}
+.flow{fill:none;stroke:var(--flow);stroke-width:4.2;stroke-linecap:round;stroke-dasharray:0.1 13;pointer-events:none;animation:flow linear infinite}
+@keyframes flow{to{stroke-dashoffset:-13.1}}
+.wirehit{fill:none;stroke:transparent;stroke-width:14;cursor:pointer}
+.wirehit.ew{cursor:ew-resize} .wirehit.ns{cursor:ns-resize}
+.tempwire{fill:none;stroke:var(--accent);stroke-width:2.5;stroke-dasharray:7 5}
+.jdot{stroke:none}
+.nodedot{stroke:var(--stroke);stroke-width:1.4}
+.nodehit{fill:transparent;cursor:crosshair}
+.sel .nodehit{cursor:move}
+.selring{fill:none;stroke:none}
+.sel .selring{stroke:var(--accent);stroke-width:2;stroke-dasharray:4 3}
+.mlet{font-size:21px;font-weight:bold;fill:var(--text);text-anchor:middle;dominant-baseline:central;pointer-events:none}
+.pol{font-size:15px;font-weight:bold;text-anchor:middle;dominant-baseline:central;pointer-events:none}
+.pol.p{fill:#d32f2f} .pol.n{fill:var(--text)}
+.lcd{fill:var(--lcd);stroke:var(--stroke);stroke-width:1.2}
+.lcdt{fill:var(--lcdt);font-size:15px;font-weight:bold;text-anchor:middle;dominant-baseline:central;font-family:Consolas,"DejaVu Sans Mono",monospace;pointer-events:none}
+.burnt{fill:#555!important}
+/* right side */
+#side{display:flex;flex-direction:column;padding:8px 10px;gap:7px;overflow:hidden}
+#side h2{font-size:16px;margin:0;display:flex;align-items:center;gap:6px}
+#meters{display:flex;flex-direction:column;gap:5px}
+.mrow{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:8px;padding:4px 8px;background:var(--bg)}
+.mrow .mi{width:28px;height:28px;border-radius:50%;border:2px solid var(--stroke);display:flex;align-items:center;justify-content:center;font-weight:bold;flex:0 0 auto}
+.mrow .mn{flex:1;font-size:14px;color:var(--muted)}
+.mrow .mv{font-family:Consolas,"DejaVu Sans Mono",monospace;font-weight:bold;font-size:17px}
+.empty{color:var(--muted);font-size:13px;line-height:1.35}
+.chk{display:flex;align-items:center;gap:6px;font-size:14px;cursor:pointer;user-select:none}
+#valBox{flex:1;min-height:0;overflow:auto;border:1px solid var(--line);border-radius:8px}
+table.vt{border-collapse:collapse;width:100%;font-size:14px}
+table.vt th{position:sticky;top:0;background:var(--chip);color:var(--muted);font-weight:bold;padding:4px 5px;text-align:right;border-bottom:1px solid var(--line)}
+table.vt th:first-child,table.vt td:first-child{text-align:left}
+table.vt td{padding:3px 5px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+.ohm{font-size:13px;color:var(--muted);line-height:1.35;border-top:1px solid var(--line);padding-top:6px}
+/* help */
+details{flex:0 0 auto}
+details summary{cursor:pointer;font-weight:bold;padding:5px 14px;background:var(--panel);border:1px solid var(--line);border-radius:10px;list-style-position:inside}
+#helpBody{display:none}
+details[open] #helpBody{display:block;position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(920px,92vw);max-height:84vh;overflow:auto;z-index:100;
+  background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 20px 14px;box-shadow:0 10px 40px rgba(0,0,0,.35)}
+#helpBody h3{margin:2px 0 6px;font-size:18px;display:flex;align-items:center}
+#helpBody h3 span{flex:1}
+#helpBody p{margin:5px 0;font-size:15px;line-height:1.4}
+#helpShade{display:none;position:fixed;inset:0;background:rgba(0,0,0,.25);z-index:99}
+details[open] #helpShade{display:block}
+.toolbar.compact > button .txt{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a class="back" id="backLink" href="index.html">← Όλες οι προσομοιώσεις</a>
+    <div class="titles">
+      <h1>idou circuits <span class="h1sub">· αναλογικά κυκλώματα</span></h1>
+      <div class="subtitle">Στήστε κυκλώματα με πηγή, αντιστάσεις και LED, και μετρήστε τάσεις και ρεύματα με βολτόμετρο και αμπερόμετρο.</div>
+    </div>
+    <button id="themeBtn"></button>
+  </header>
+  <div class="toolbar">
+    <button id="undoBtn" class="ico" title="Αναίρεση (Ctrl+Z)">↶</button><button id="redoBtn" class="ico" title="Επανάληψη (Ctrl+Y)">↷</button>
+    <button id="rotBtn" title="Περιστροφή επιλεγμένου κατά 90° (R)">↻<span class="txt"> Περιστροφή</span></button>
+    <button id="delBtn" title="Διαγραφή επιλεγμένου (Delete)">🗑<span class="txt"> Διαγραφή</span></button>
+    <button id="flowBtn" title="Κινούμενες τελείες που δείχνουν τη φορά του ρεύματος (συμβατική φορά)">⇢<span class="txt"> Ροή ρεύματος</span></button>
+    <span class="spacer"></span>
+    <button id="exBtn" title="Φορτώνει ένα έτοιμο παράδειγμα">💡<span class="txt"> Παράδειγμα</span></button>
+    <button id="clearBtn" title="Σβήσιμο όλου του κυκλώματος">⟲<span class="txt"> Καθαρισμός</span></button>
+    <button id="pngBtn" title="Εικόνα του κυκλώματος (PNG)">🖼<span class="txt"> Εικόνα</span></button>
+    <button id="saveBtn" title="Αποθήκευση του κυκλώματος σε αρχείο">💾<span class="txt"> Αποθήκευση</span></button>
+    <button id="openBtn" title="Άνοιγμα κυκλώματος από αρχείο">📂<span class="txt"> Άνοιγμα</span></button>
+    <input type="file" id="fileIn" accept=".json,application/json" style="display:none">
+  </div>
+  <main>
+    <div class="panel" id="palette"></div>
+    <div class="panel" id="canvasBox">
+     <div id="drawArea">
+      <svg id="cv" xmlns="http://www.w3.org/2000/svg">
+        <defs><pattern id="gridP" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="10" cy="10" r="1.2" fill="var(--grid)"/></pattern>
+          <filter id="glow" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="7"/></filter></defs>
+        <rect id="bgRect" width="100%" height="100%" fill="url(#gridP)"/>
+        <g id="wiresG"></g><g id="compsG"></g><g id="topG"></g>
+        <path id="temp" class="tempwire" d="" style="display:none"/>
+      </svg>
+      <input id="titleIn" maxlength="60" spellcheck="false" placeholder="✎ Τίτλος κυκλώματος" title="Ο τίτλος γίνεται όνομα αρχείου και μπαίνει στην εικόνα">
+      <div id="props"></div>
+     </div>
+     <div id="statusBar"><div id="msg"></div><div id="hintTip"></div></div>
+    </div>
+    <div class="panel" id="side">
+      <h2>Όργανα μέτρησης</h2>
+      <div id="meters"></div>
+      <label class="chk"><input type="checkbox" id="showVals"> Εμφάνιση των τιμών όλων των στοιχείων</label>
+      <div id="valBox" style="display:none"><table class="vt" id="vt"></table></div>
+      <div class="sp" style="flex:1" id="sideSp"></div>
+      <div class="ohm"><b>Νόμος του Ohm:</b> I = V / R. Το <b>βολτόμετρο</b> συνδέεται <b>παράλληλα</b> στο στοιχείο, το <b>αμπερόμετρο</b> <b>σε σειρά</b> με αυτό.</div>
+    </div>
+  </main>
+  <details>
+    <summary>Πώς λειτουργεί</summary>
+    <div id="helpShade"></div>
+    <div id="helpBody"><h3><span>Πώς λειτουργεί</span><button id="helpClose" title="Κλείσιμο (Esc)">✕</button></h3>
+    <p><b>Σχεδίαση.</b> Σύρετε στοιχεία από την παλέτα στον πίνακα. Ενώστε δύο ακροδέκτες τραβώντας με το ποντίκι από τον έναν στον άλλον. Αν αφήσετε το καλώδιο σε κενό σημείο ή πάνω σε άλλο καλώδιο, δημιουργείται εκεί κόμβος (τελεία) για διακλάδωση. Ένα νέο καλώδιο έχει μία γωνία (σχήμα Γ): αν ξεκινήσετε να σέρνετε οριζόντια, πηγαίνει πρώτα οριζόντια και μετά κάθετα· αν ξεκινήσετε κάθετα, το αντίθετο. Για να αλλάξετε, γυρίστε το ποντίκι στο σημείο εκκίνησης και ξεκινήστε ξανά. Κάθε ευθύγραμμο τμήμα ενός καλωδίου μετακινείται αν το σύρετε (↕ ή ↔). Κλικ = επιλογή, Delete = διαγραφή, R = περιστροφή κατά 90°.</p>
+    <p><b>Στοιχεία.</b> Η <b>πηγή τάσης</b> έχει ρυθμιζόμενη τάση (το μακρύ πλακίδιο είναι ο θετικός πόλος +). Η <b>γείωση</b> είναι το σημείο αναφοράς 0 V. Η τιμή της <b>αντίστασης</b> γράφεται π.χ. 220, 1k, 4,7k, 1M. Το <b>LED</b> έχει χρώμα κόκκινο, κίτρινο, πράσινο, μπλε ή λευκό· ανάβει μόνο όταν η άνοδος (αριστερά, τρίγωνο) είναι θετικότερη από την κάθοδο (γραμμή) και φωτίζει περισσότερο όσο μεγαλώνει το ρεύμα. Αν περάσει πολύ μεγάλο ρεύμα (πάνω από 60 mA), <b>καίγεται</b> — γι' αυτό μπαίνει πάντα αντίσταση σε σειρά, π.χ. 220 Ω.</p>
+    <p><b>Όργανα.</b> Το <b>βολτόμετρο</b> μετρά την τάση ανάμεσα στους ακροδέκτες του (+ κόκκινο, − μαύρο) και συνδέεται <b>παράλληλα</b>· έχει πολύ μεγάλη εσωτερική αντίσταση (10 MΩ). Το <b>αμπερόμετρο</b> μετρά το ρεύμα που περνά από μέσα του από το + προς το − και συνδέεται <b>σε σειρά</b>· έχει σχεδόν μηδενική αντίσταση, γι' αυτό αν συνδεθεί παράλληλα στην πηγή προκαλεί βραχυκύκλωμα. Αρνητική ένδειξη σημαίνει ότι το όργανο είναι ανάποδα συνδεδεμένο.</p>
+    <p><b>Ροή ρεύματος.</b> Με το κουμπί «Ροή ρεύματος» οι κίτρινες τελείες δείχνουν τη συμβατική φορά του ρεύματος (από το + προς το −)· όσο μεγαλύτερο το ρεύμα, τόσο πιο γρήγορα κινούνται. Το χρώμα των καλωδίων δείχνει το δυναμικό: γκρι κοντά στα 0 V, κόκκινο κοντά στη μέγιστη τάση της πηγής.</p>
+    <p><b>Τιμές.</b> Η επιλογή «Εμφάνιση των τιμών όλων των στοιχείων» δείχνει τάση, ρεύμα και ισχύ κάθε στοιχείου — χρήσιμη για έλεγχο του νόμου του Ohm. Αν θέλετε οι μαθητές να μετρήσουν μόνοι τους, αφήστε την κλειστή.</p>
+    </div>
+  </details>
+</div>
+<script>
+'use strict';
+const $=id=>document.getElementById(id);
+const store={get(k){try{return localStorage.getItem(k);}catch(e){return null;}},set(k,v){try{localStorage.setItem(k,v);}catch(e){}}};
+const KEY='idouAnalogCircuit', GRID=10, snap=v=>Math.round(v/GRID)*GRID;
+const cv=$('cv');
+let comps=[], wires=[], nextId=1, sel=null, drag=null, title='', flowOn=store.get('idouAnalogFlow')!=='0', resSym=store.get('idouAnalogResSym')==='iec'?'iec':'zig';
+let lastSol=null, flashUntil=0;
+
+// ---------------- theme ----------------
+function setTheme(d){ document.body.classList.toggle('dark',d); $('themeBtn').textContent=d?'☀️ Φωτεινό θέμα':'🌙 Σκούρο θέμα'; store.set('gateSimTheme',d?'dark':'light');
+  $('backLink').href='index.html'+(d?'#dark':'#light'); if(comps.length) redraw(); }
+$('themeBtn').onclick=()=>setTheme(!document.body.classList.contains('dark'));
+{ const h=(location.hash||'').toLowerCase(); setTheme(h==='#dark'?true:h==='#light'?false:store.get('gateSimTheme')==='dark'); }
+
+// ---------------- components ----------------
+const NAMES={VS:'Πηγή τάσης',GND:'Γείωση',R:'Αντίσταση',LED:'LED',VM:'Βολτόμετρο',AM:'Αμπερόμετρο',NODE:'Κόμβος'};
+const PREFIX={VS:'V',R:'R',LED:'LED',VM:'VM',AM:'AM'};
+const LEDC={red:{n:'κόκκινο',c:'#e53935',off:'#f4c7c4',vf:1.9},yellow:{n:'κίτρινο',c:'#fdd835',off:'#f6eec0',vf:2.0},green:{n:'πράσινο',c:'#43a047',off:'#cfe8cf',vf:2.1},
+  blue:{n:'μπλε',c:'#1e88e5',off:'#c7dcf2',vf:3.0},white:{n:'λευκό',c:'#f4f8ff',g:'#8fbaff',off:'#e4e7ec',vf:3.0}};
+const TL={VS:[[-40,0],[40,0]],R:[[-40,0],[40,0]],LED:[[-40,0],[40,0]],VM:[[-40,0],[40,0]],AM:[[-40,0],[40,0]],GND:[[0,-20]],NODE:[[0,0]]};
+const rot=(x,y,r)=>{ for(let i=0;i<(r||0);i++){ const t=x; x=-y; y=t; } return [x,y]; }; // 90° clockwise each step (screen y points down)
+function terms(c){ return TL[c.type].map(([x,y],k)=>{ const [rx,ry]=rot(x,y,c.r); const [dx,dy]=c.type==='NODE'?[0,0]:rot(Math.sign(x),Math.sign(y),c.r); return {x:c.x+rx,y:c.y+ry,dx,dy,k}; }); }
+const byId=id=>comps.find(c=>c.id===id);
+function nextLabel(type){ const p=PREFIX[type]; if(!p) return ''; const used=new Set(comps.filter(c=>c.type===type).map(c=>c.label)); for(let i=1;;i++) if(!used.has(p+i)) return p+i; }
+function addComp(type,x,y,extra){ const c={id:nextId++,type,x:snap(x),y:snap(y),r:0,...(extra||{})};
+  if(type==='VS'&&c.v===undefined) c.v=5; if(type==='R'&&c.ohm===undefined) c.ohm=220; if(type==='LED'&&!c.color) c.color='red';
+  if(!c.label&&PREFIX[type]) c.label=nextLabel(type); comps.push(c); return c; }
+
+// numbers: Greek decimal comma, engineering prefixes
+function eng(v,unit,dig){ dig=dig||3; if(v===null||v===undefined||!isFinite(v)) return '—';
+  const a=Math.abs(v); if(a<1e-12) return '0 '+unit;
+  const P=[[1e6,'M'],[1e3,'k'],[1,''],[1e-3,'m'],[1e-6,'µ'],[1e-9,'n']]; let s=P.find(p=>a>=p[0]*0.9995)||P[P.length-1];
+  let n=(v/s[0]); let t=Math.abs(n)>=100?n.toFixed(Math.max(0,dig-3)):Math.abs(n)>=10?n.toFixed(Math.max(0,dig-2)):n.toFixed(Math.max(0,dig-1));
+  return t.replace('.',',').replace('-','−')+' '+s[1]+unit; }
+function parseVal(s){ // "220", "1k", "4,7k", "4k7", "1M", "10 kΩ"
+  s=String(s).trim().replace(/Ω|ohm|v$/gi,'').replace(/\s+/g,'').replace(',','.');
+  let m=s.match(/^(\d+)([kKmMR])(\d+)$/); if(m) s=m[1]+'.'+m[3]+(m[2]==='R'?'':m[2]);
+  m=s.match(/^(\d*\.?\d+)([kKmM]?)$/); if(!m) return NaN; let v=parseFloat(m[1]);
+  if(m[2]==='k'||m[2]==='K') v*=1e3; else if(m[2]==='M') v*=1e6; else if(m[2]==='m') v*=1e-3; return v; }
+
+// ---------------- solver: nodal analysis, LEDs by Newton's method ----------------
+const RS=0.05, RAM=0.001, RVM=1e7, GMIN=1e-9, NVT=0.05, IBURN=0.06, ISHORT=2;
+const ledIs=c=>0.02/Math.exp(LEDC[c.color].vf/NVT); // 20 mA at the nominal forward voltage
+function solveLinear(A,b){ const n=b.length; for(let i=0;i<n;i++){ let p=i; for(let r=i+1;r<n;r++) if(Math.abs(A[r][i])>Math.abs(A[p][i])) p=r;
+    if(Math.abs(A[p][i])<1e-30) return null; [A[i],A[p]]=[A[p],A[i]]; [b[i],b[p]]=[b[p],b[i]];
+    for(let r=i+1;r<n;r++){ const f=A[r][i]/A[i][i]; if(!f) continue; for(let c=i;c<n;c++) A[r][c]-=f*A[i][c]; b[r]-=f*b[i]; } }
+  const x=new Array(n).fill(0); for(let i=n-1;i>=0;i--){ let s=b[i]; for(let c=i+1;c<n;c++) s-=A[i][c]*x[c]; x[i]=s/A[i][i]; } return x; }
+function pnjlim(vn,vo,vt,vcrit){ if(vn>vcrit&&Math.abs(vn-vo)>2*vt){ if(vo>0){ const a=1+(vn-vo)/vt; vn=a>0?vo+vt*Math.log(a):vcrit; } else vn=vt*Math.log(vn/vt); } return vn; }
+function nets(){ // union-find of terminals joined by wires; every ground symbol is the same net (0 V)
+  const P={}; const f=a=>{ while(P[a]!==a){ P[a]=P[P[a]]; a=P[a]; } return a; }; const u=(a,b)=>{ a=f(a); b=f(b); if(a!==b) P[a]=b; };
+  P.G='G'; comps.forEach(c=>terms(c).forEach((t,k)=>{ P[c.id+':'+k]=c.id+':'+k; }));
+  wires.forEach(w=>{ const a=w.a.c+':'+w.a.k, b=w.b.c+':'+w.b.k; if(P[a]&&P[b]) u(a,b); });
+  comps.forEach(c=>{ if(c.type==='GND') u(c.id+':0','G'); });
+  const idx={}; let n=0; const g=f('G'); Object.keys(P).forEach(k=>{ const r=f(k); if(r===g) idx[k]=-1; else { if(!(r in idx)) idx[r]=n++; idx[k]=idx[r]; } });
+  return {node:(c,k)=>idx[c+':'+k],n}; }
+function solve(){
+  const N=nets(), n=N.n, el=comps.filter(c=>['VS','R','LED','VM','AM'].includes(c.type));
+  const nd=c=>[N.node(c.id,0),N.node(c.id,1)];
+  let V=new Array(n).fill(0), ok=true, burntNow=[];
+  for(let pass=0;pass<4;pass++){
+    const leds=el.filter(c=>c.type==='LED'&&!c.burnt), vd={}; leds.forEach(c=>vd[c.id]=0);
+    let conv=false;
+    for(let it=0;it<400&&!conv;it++){
+      const A=Array.from({length:n},()=>new Array(n).fill(0)), b=new Array(n).fill(0);
+      const G=(i,j,g)=>{ if(i>=0) A[i][i]+=g; if(j>=0) A[j][j]+=g; if(i>=0&&j>=0){ A[i][j]-=g; A[j][i]-=g; } };
+      const I=(i,j,cur)=>{ if(i>=0) b[i]-=cur; if(j>=0) b[j]+=cur; }; // a current "cur" leaving node i and entering node j
+      for(let i=0;i<n;i++) A[i][i]+=GMIN;
+      el.forEach(c=>{ const [a,k]=nd(c);
+        if(c.type==='R') G(a,k,1/Math.max(c.ohm,1e-3));
+        else if(c.type==='VM') G(a,k,1/RVM);
+        else if(c.type==='AM') G(a,k,1/RAM);
+        else if(c.type==='VS'){ G(a,k,1/RS); I(k,a,c.v/RS); } // Norton: the source pushes current out of its + terminal
+        else if(c.type==='LED'&&!c.burnt){ const Is=ledIs(c), x=vd[c.id], e=Math.exp(Math.min(x/NVT,80)), id=Is*(e-1), gd=Is/NVT*e+1e-12;
+          G(a,k,gd); I(a,k,id-gd*x); } });
+      const x=solveLinear(A,b); if(!x){ ok=false; break; }
+      conv=true; for(let i=0;i<n;i++) if(Math.abs(x[i]-V[i])>1e-7*Math.max(1,Math.abs(x[i]))) conv=false;
+      V=x;
+      leds.forEach(c=>{ const [a,k]=nd(c), vn=(a>=0?V[a]:0)-(k>=0?V[k]:0), Is=ledIs(c), vcrit=NVT*Math.log(NVT/(Math.SQRT2*Is));
+        const lim=pnjlim(vn,vd[c.id],NVT,vcrit); if(Math.abs(lim-vd[c.id])>1e-9) conv=conv&&Math.abs(lim-vn)<1e-9; vd[c.id]=lim; });
+    }
+    if(!conv) ok=false;
+    // a LED with too much current burns: solve again without it
+    const nb=leds.filter(c=>{ const [a,k]=nd(c), v=(a>=0?V[a]:0)-(k>=0?V[k]:0); return ledIs(c)*(Math.exp(Math.min(v/NVT,80))-1)>IBURN; });
+    if(!nb.length) break; nb.forEach(c=>{ c.burnt=true; burntNow.push(c.id); });
+  }
+  const vAt=(c,k)=>{ const i=N.node(c.id,k); return i>=0?V[i]:0; };
+  const res={}; comps.forEach(c=>{ const t=terms(c), va=vAt(c,0), vb=t.length>1?vAt(c,1):va; let i=0, v=va-vb;
+    if(c.type==='R') i=v/c.ohm; else if(c.type==='VM') i=v/RVM; else if(c.type==='AM') i=v/RAM;
+    else if(c.type==='VS') i=(v-c.v)/RS; else if(c.type==='LED') i=c.burnt?0:ledIs(c)*(Math.exp(Math.min(v/NVT,80))-1);
+    res[c.id]={v,i,va,vb}; });
+  return {ok,res,N,V,burntNow,vAt}; }
+
+// current in each wire (for the moving dots): the wires of a group form a tree; each terminal injects its current
+function wireCurrents(S){
+  const out={}, inj={}; comps.forEach(c=>{ const r=S.res[c.id]; if(!r) return;
+    if(['VS','R','LED','VM','AM'].includes(c.type)){ inj[c.id+':0']=r.i; inj[c.id+':1']=-r.i; } else inj[c.id+':0']=0; });
+  const adj={}; wires.forEach(w=>{ const a=w.a.c+':'+w.a.k, b=w.b.c+':'+w.b.k; (adj[a]=adj[a]||[]).push([b,w]); (adj[b]=adj[b]||[]).push([a,w]); });
+  const seen=new Set();
+  const roots=Object.keys(adj).sort((x,y)=>{ const gx=byId(+x.split(':')[0])?.type==='GND'?0:1, gy=byId(+y.split(':')[0])?.type==='GND'?0:1; return gx-gy; });
+  roots.forEach(r=>{ if(seen.has(r)) return; const order=[], par={}; seen.add(r); const st=[r];
+    while(st.length){ const u=st.pop(); order.push(u); (adj[u]||[]).forEach(([v,w])=>{ if(seen.has(v)) return; seen.add(v); par[v]=[u,w]; st.push(v); }); }
+    const S2={}; for(let i=order.length-1;i>=0;i--){ const u=order[i]; S2[u]=(S2[u]||0)+(inj[u]||0);
+      if(par[u]){ const [p,w]=par[u]; S2[p]=(S2[p]||0)+S2[u]; const pk=w.a.c+':'+w.a.k; out[w.id]=pk===p?S2[u]:-S2[u]; } } });
+  return out; } // >0: current flows from end a to end b
+
+// ---------------- wire routing (orthogonal) ----------------
+function route(w){
+  const ca=byId(w.a.c), cb=byId(w.b.c); if(!ca||!cb) return null;
+  const A=terms(ca)[w.a.k], B=terms(cb)[w.b.k]; if(!A||!B) return null;
+  if(w.via&&w.via.length){ const q=orthoPath([A,...w.via,B],tdir(A),tdir(B)); return {pts:q,handle:null,d:'M'+q.map(p=>p.x+','+p.y).join(' L')}; }
+  let da=[A.dx,A.dy], db=[B.dx,B.dy];
+  const hor=d=>d[0]!==0, ver=d=>d[1]!==0, none=d=>!d[0]&&!d[1];
+  // a node has no side: it "faces" the other end of the wire, along the axis the other terminal uses
+  const toward=(X,Y,axisH)=>axisH?[Math.sign(Y.x-X.x)||1,0]:[0,Math.sign(Y.y-X.y)||1];
+  if(none(da)&&none(db)){ const h=Math.abs(B.x-A.x)>=Math.abs(B.y-A.y); da=toward(A,B,h); db=toward(B,A,h); }
+  else if(none(da)||none(db)){ // node + terminal: prefer an L shape (the node side perpendicular) when it reaches the terminal from the right side
+    const nodeA=none(da), N=nodeA?A:B, T=nodeA?B:A, dT=nodeA?db:da, sT={x:T.x+dT[0]*10,y:T.y+dT[1]*10};
+    const okL=hor(dT)?(sT.x-N.x)*dT[0]>=0&&(T.x-N.x)*dT[0]>=0:(sT.y-N.y)*dT[1]>=0&&(T.y-N.y)*dT[1]>=0;
+    const dN=okL?toward(N,T,!hor(dT)):toward(N,T,hor(dT)); if(nodeA) da=dN; else db=dN; }
+  const st=(T,d,len)=>({x:T.x+d[0]*len,y:T.y+d[1]*len});
+  const p1=st(A,[A.dx,A.dy],A.dx||A.dy?10:0), p2=st(B,[B.dx,B.dy],B.dx||B.dy?10:0);
+  let mid, kind, pts;
+  const hvh=mx=>[A,p1,{x:mx,y:p1.y},{x:mx,y:p2.y},p2,B], vhv=my=>[A,p1,{x:p1.x,y:my},{x:p2.x,y:my},p2,B];
+  const okH=mx=>(!hor(da)||(mx-p1.x)*da[0]>=0)&&(!hor(db)||(mx-p2.x)*db[0]>=0);
+  const okV=my=>(!ver(da)||(my-p1.y)*da[1]>=0)&&(!ver(db)||(my-p2.y)*db[1]>=0);
+  const mx0=snap((p1.x+p2.x)/2), my0=snap((p1.y+p2.y)/2);
+  if((hor(da)||none(da))&&(hor(db)||none(db))){
+    if(okH(mx0)){ kind='h'; mid=typeof w.mo==='number'?p1.x+w.mo:mx0; }
+    else { kind='v'; const ys=[A.y,B.y]; mid=typeof w.mo==='number'?p1.y+w.mo:(Math.abs(p1.y-p2.y)>=40?my0:Math.min(...ys)-40); } }
+  else if(ver(da)&&ver(db)){
+    if(okV(my0)){ kind='v'; mid=typeof w.mo==='number'?p1.y+w.mo:my0; }
+    else { kind='h'; mid=typeof w.mo==='number'?p1.x+w.mo:(Math.abs(p1.x-p2.x)>=40?mx0:Math.max(A.x,B.x)+40); } }
+  else { kind='L'; } // one horizontal, one vertical: an L shape
+  if(kind==='h') pts=hvh(mid); else if(kind==='v') pts=vhv(mid);
+  else { const c1={x:hor(da)?p2.x:p1.x,y:hor(da)?p1.y:p2.y}; pts=[A,p1,c1,p2,B]; }
+  // tidy: drop repeated and collinear points
+  const q=[]; pts.forEach(p=>{ const l=q[q.length-1]; if(l&&l.x===p.x&&l.y===p.y) return; q.push({x:p.x,y:p.y}); });
+  for(let i=q.length-2;i>0;i--){ const a=q[i-1],b=q[i],c=q[i+1]; if((a.x===b.x&&b.x===c.x)||(a.y===b.y&&b.y===c.y)) q.splice(i,1); }
+  const handle=kind==='L'?null:{kind,base:kind==='h'?p1.x:p1.y,pos:mid};
+  return {pts:q,handle,d:'M'+q.map(p=>p.x+','+p.y).join(' L')}; }
+function tidyPts(pts){ const q=[]; pts.forEach(p=>{ const l=q[q.length-1]; if(l&&l.x===p.x&&l.y===p.y) return; q.push({x:p.x,y:p.y}); });
+  for(let i=q.length-2;i>0;i--){ const a=q[i-1],b=q[i],c=q[i+1]; if((a.x===b.x&&b.x===c.x)||(a.y===b.y&&b.y===c.y)) q.splice(i,1); } return q; }
+// orthogonal path through the points P (waypoints the student drew); where two points are not aligned a corner is added
+function orthoPath(P,firstDir,lastDir){ const out=[P[0]];
+  for(let i=1;i<P.length;i++){ const a=out[out.length-1], b=P[i];
+    if(a.x!==b.x&&a.y!==b.y){ let hFirst;
+      if(i===P.length-1&&lastDir) hFirst=lastDir!=='h';          // arrive at the terminal along its own direction
+      else if(i===1&&firstDir) hFirst=firstDir==='h';            // leave the terminal along its own direction
+      else { const pv=out.length>1?out[out.length-2]:null; hFirst=pv?pv.y!==a.y:true; } // turn: perpendicular to the previous piece
+      out.push(hFirst?{x:b.x,y:a.y}:{x:a.x,y:b.y}); }
+    out.push({x:b.x,y:b.y}); }
+  return tidyPts(out); }
+// a new wire has ONE corner (an L): its first piece follows the direction in which the mouse started moving
+// (horizontal or vertical); going back to the starting point lets the student choose again
+function traceMove(d,m){ const S=d.start;
+  if(Math.abs(m.x-S.x)<8&&Math.abs(m.y-S.y)<8){ d.dir=null; return; }
+  if(!d.dir&&Math.hypot(m.x-S.x,m.y-S.y)>=16) d.dir=Math.abs(m.x-S.x)>=Math.abs(m.y-S.y)?'h':'v'; }
+function tracePreview(d,m){ const S=d.start; if(!d.dir) return [S,m]; return tidyPts([S,d.dir==='h'?{x:m.x,y:S.y}:{x:S.x,y:m.y},m]); }
+// the corner of the L; next to a terminal that faces sideways a short 20 px piece keeps the wire entering/leaving
+// along the terminal's own direction (so it never runs over the component)
+function lCorner(d,T,dS,dT){ const S=d.start; if(!d.dir) return [];
+  if(d.dir==='h'){ if(S.y===T.y) return []; return [{x:dT[0]?T.x+dT[0]*20:T.x,y:S.y}]; }
+  if(S.x===T.x) return []; return [{x:dS[0]?S.x+dS[0]*20:S.x,y:T.y}]; }
+const tdir=T=>T.dx?'h':T.dy?'v':null;
+function distSeg(p,a,b){ const dx=b.x-a.x, dy=b.y-a.y, L=dx*dx+dy*dy; let t=L?((p.x-a.x)*dx+(p.y-a.y)*dy)/L:0; t=Math.max(0,Math.min(1,t)); const q={x:a.x+t*dx,y:a.y+t*dy}; return {d:Math.hypot(p.x-q.x,p.y-q.y),q}; }
+function wireAt(x,y,skip){ let best=null; wires.forEach(w=>{ if(skip&&skip(w)) return; const r=route(w); if(!r) return; for(let i=0;i<r.pts.length-1;i++){ const m=distSeg({x,y},r.pts[i],r.pts[i+1]); if(m.d<9&&(!best||m.d<best.d)) best={w,d:m.d,q:m.q}; } }); return best; }
+
+// ---------------- drawing ----------------
+function mix(c1,c2,t){ const h=s=>[1,3,5].map(i=>parseInt(s.slice(i,i+2),16)); const a=h(c1), b=h(c2); return '#'+a.map((v,i)=>Math.round(v+(b[i]-v)*t).toString(16).padStart(2,'0')).join(''); }
+const cssv=n=>getComputedStyle(document.body).getPropertyValue(n).trim();
+function resShape(){ return resSym==='iec'
+  ? '<line class="lead" x1="-40" y1="0" x2="-22" y2="0"/><line class="lead" x1="22" y1="0" x2="40" y2="0"/><rect class="gbody" x="-22" y="-8" width="44" height="16"/>'
+  : '<line class="lead" x1="-40" y1="0" x2="-24" y2="0"/><line class="lead" x1="24" y1="0" x2="40" y2="0"/><path class="gline" d="M-24,0 L-20,-8 L-12,8 L-4,-8 L4,8 L12,-8 L20,8 L24,0"/>'; }
+function shapeOf(c,S){ // local coordinates (horizontal); the group is rotated
+  if(c.type==='R') return resShape();
+  if(c.type==='VS') return '<line class="lead" x1="-40" y1="0" x2="-5" y2="0"/><line class="lead" x1="5" y1="0" x2="40" y2="0"/><line class="lead" x1="-5" y1="-18" x2="-5" y2="18" style="stroke-width:2.6"/><line class="lead" x1="5" y1="-9" x2="5" y2="9" style="stroke-width:5"/>';
+  if(c.type==='GND') return '<line class="lead" x1="0" y1="-20" x2="0" y2="0"/><line class="lead" x1="-15" y1="0" x2="15" y2="0" style="stroke-width:2.6"/><line class="lead" x1="-9" y1="6" x2="9" y2="6" style="stroke-width:2.4"/><line class="lead" x1="-4" y1="12" x2="4" y2="12" style="stroke-width:2.2"/>';
+  if(c.type==='VM'||c.type==='AM') return '<line class="lead" x1="-40" y1="0" x2="-20" y2="0"/><line class="lead" x1="20" y1="0" x2="40" y2="0"/><circle class="gbody" r="20"/>';
+  if(c.type==='LED'){ const L=LEDC[c.color]||LEDC.red, r=S&&S.res[c.id], i=r?r.i:0, b=c.burnt?0:Math.max(0,Math.min(1,i/0.02));
+    const on=b>0.02, fill=c.burnt?'#5a5a5a':on?mix(L.off,L.c,Math.pow(b,0.5)):L.off;
+    return `${on?`<circle r="24" fill="${L.g||L.c}" opacity="${(0.25+0.65*Math.pow(b,0.6)).toFixed(2)}" filter="url(#glow)"/>`:''}
+      <line class="lead" x1="-40" y1="0" x2="-12" y2="0"/><line class="lead" x1="11" y1="0" x2="40" y2="0"/>
+      <path d="M-12,-13 L-12,13 L11,0 Z" fill="${fill}" stroke="var(--stroke)" stroke-width="2.2" stroke-linejoin="round"/>
+      <line class="lead" x1="11" y1="-13" x2="11" y2="13" style="stroke-width:2.6"/>
+      <path class="gline" d="M0,-15 L8,-25 M3,-25 L8,-25 L8,-20 M8,-11 L16,-21 M11,-21 L16,-21 L16,-16" style="stroke-width:1.6"/>
+      ${c.burnt?'<path d="M-6,-8 L6,8 M6,-8 L-6,8" stroke="#ff5252" stroke-width="2.6"/>':''}`; }
+  return ''; }
+function iconSVG(t){ const c={type:t,r:0,color:'red',v:5,ohm:220};
+  if(t==='NODE') return '<svg viewBox="-48 -26 96 52"><line class="lead" x1="-30" y1="0" x2="30" y2="0"/><line class="lead" x1="0" y1="0" x2="0" y2="22"/><circle class="nodedot" r="6" fill="var(--zero)"/></svg>';
+  if(t==='GND') return '<svg viewBox="-48 -26 96 52">'+shapeOf(c).replace(/y1="-20"/,'y1="-22"')+'</svg>';
+  const let_=t==='VM'?'V':t==='AM'?'A':''; return `<svg viewBox="-48 -28 96 56">${shapeOf(c)}${let_?`<text class="mlet" x="0" y="1">${let_}</text>`:''}</svg>`; }
+function buildPalette(){ const items=[['VS','Πηγή τάσης'],['GND','Γείωση'],['R','Αντίσταση'],['LED','LED'],['VM','Βολτόμετρο'],['AM','Αμπερόμετρο'],['NODE','Κόμβος']];
+  $('palette').innerHTML='<div class="ph">Στοιχεία</div>'+items.slice(0,4).map(([t,n])=>`<div class="pi" data-type="${t}" title="${n}">${iconSVG(t)}<span>${n}</span></div>`).join('')
+    +'<div class="ph">Όργανα</div>'+items.slice(4,6).map(([t,n])=>`<div class="pi" data-type="${t}" title="${n}">${iconSVG(t)}<span>${n}</span></div>`).join('')
+    +'<div class="ph">Σύνδεση</div>'+`<div class="pi" data-type="NODE" title="Σημείο διακλάδωσης καλωδίων">${iconSVG('NODE')}<span>Κόμβος</span></div>`;
+  $('palette').querySelectorAll('.pi').forEach(el=>el.addEventListener('pointerdown',ev=>startNew(ev,el.dataset.type))); }
+
+function labelPos(c){ // upright text next to the symbol, outside the rotated group
+  const vert=c.r%2===1, W=canvasSize().w;
+  if(c.type==='VM'||c.type==='AM') return vert?(c.x+128>W?{x:c.x-40,y:c.y,anchor:'end'}:{x:c.x+40,y:c.y,anchor:'start'}):{x:c.x,y:c.y-40,anchor:'middle'};
+  return vert?{x:c.x+(c.type==='LED'?30:18),y:c.y,anchor:'start'}:{x:c.x,y:c.y-(c.type==='LED'?34:24),anchor:'middle'}; }
+function redraw(){
+  // the selected item may no longer exist (e.g. a selected wire was split by a new node): forget it
+  if(sel&&(sel.type==='wire'?!wires.some(w=>w.id===sel.id):!byId(sel.id))){ sel=null; propsKey=''; }
+  const S=solve(); lastSol=S; const R={}; wires.forEach(w=>{ const r=route(w); if(r) R[w.id]=r; });
+  const one=cssv('--one')||'#e8411f', zero=cssv('--zero')||'#8a94a6';
+  const vmax=Math.max(1,...comps.filter(c=>c.type==='VS').map(c=>Math.abs(c.v)));
+  const vOfTerm=(id,k)=>{ const i=S.N.node(id,k); return i>=0?S.V[i]:0; };
+  const IW=flowOn?wireCurrents(S):{};
+  let wh='', ww='', wf='';
+  // count connections per terminal → junction dots
+  const cnt={}; wires.forEach(w=>{ [w.a,w.b].forEach(e=>{ const k=e.c+':'+e.k; cnt[k]=(cnt[k]||0)+1; }); });
+  // wires of the same net are drawn together: halos first, then lines, so a halo only cuts wires of OTHER nets (crossings)
+  const groups={}; wires.forEach(w=>{ if(R[w.id]) (groups[S.N.node(w.a.c,w.a.k)]=groups[S.N.node(w.a.c,w.a.k)]||[]).push(w); });
+  Object.values(groups).forEach(gw=>{ gw.forEach(w=>{ ww+=`<path class="halo" d="${R[w.id].d}"/>`; });
+  gw.forEach(w=>{ const r=R[w.id]; const v=vOfTerm(w.a.c,w.a.k), col=mix(zero,one,Math.max(0,Math.min(1,v/vmax)));
+    const isSel=sel&&sel.type==='wire'&&sel.id===w.id;
+    ww+=`<path class="wire${isSel?' selw':''}" d="${r.d}" style="stroke:${col}"/>`;
+    const i=IW[w.id]||0, a=Math.abs(i);
+    if(flowOn&&a>1e-6){ const dur=Math.max(0.25,Math.min(2.4,2.4-0.4*Math.log10(a/1e-6))); ww+=`<path class="flow" d="${r.d}" style="animation-duration:${dur.toFixed(2)}s${i<0?';animation-direction:reverse':''}"/>`; }
+    // handle for dragging the middle piece
+    { const P=r.pts; for(let s=0;s<P.length-1;s++){ const a1=P[s],b1=P[s+1]; if(a1.x===b1.x&&a1.y===b1.y) continue;
+        wh+=`<path class="wirehit ${a1.y===b1.y?'ns':'ew'}" data-wire="${w.id}" data-seg="${s}" d="M${a1.x},${a1.y} L${b1.x},${b1.y}"/>`; } } }); });
+  // dots where 3 or more connections meet at a terminal
+  // dots where wires of the same net branch (a T or a cross with 3+ directions), away from terminals and nodes
+  const termPts=new Set(); comps.forEach(c=>terms(c).forEach(t=>termPts.add(t.x+','+t.y)));
+  Object.values(groups).forEach(gw=>{ const segs=[]; gw.forEach(w=>{ const P=R[w.id].pts; for(let i=0;i<P.length-1;i++) segs.push([P[i],P[i+1]]); });
+    const verts=new Map(); segs.forEach(([a,b])=>{ verts.set(a.x+','+a.y,a); verts.set(b.x+','+b.y,b); });
+    verts.forEach((P,key)=>{ if(termPts.has(key)) return; const dirs=new Set();
+      const d=(a,b)=>b.x>a.x?'R':b.x<a.x?'L':b.y>a.y?'D':'U';
+      segs.forEach(([a,b])=>{ if(a.x===b.x&&a.y===b.y) return;
+        if(a.x===P.x&&a.y===P.y) dirs.add(d(a,b)); else if(b.x===P.x&&b.y===P.y) dirs.add(d(b,a));
+        else if((a.x===b.x&&a.x===P.x&&P.y>Math.min(a.y,b.y)&&P.y<Math.max(a.y,b.y))||(a.y===b.y&&a.y===P.y&&P.x>Math.min(a.x,b.x)&&P.x<Math.max(a.x,b.x))){ dirs.add(d(P,a)); dirs.add(d(P,b)); } });
+      if(dirs.size>=3){ const w0=gw[0], v=vOfTerm(w0.a.c,w0.a.k); ww+=`<circle class="jdot" cx="${P.x}" cy="${P.y}" r="4.8" fill="${mix(zero,one,Math.max(0,Math.min(1,v/vmax)))}"/>`; } }); });
+  $('wiresG').innerHTML=ww+wh;
+  // components
+  let h='';
+  comps.forEach(c=>{ const isSel=sel&&sel.type==='comp'&&sel.id===c.id; const T=terms(c);
+    if(c.type==='NODE'){ const v=vOfTerm(c.id,0), j=(cnt[c.id+':0']||0)>=3, col=mix(zero,one,Math.max(0,Math.min(1,v/vmax)));
+      h+=`<g class="${isSel?'sel':''}"><circle class="selring" cx="${c.x}" cy="${c.y}" r="11"/>${j?`<circle class="nodedot" cx="${c.x}" cy="${c.y}" r="5.5" fill="${col}"/>`:`<circle cx="${c.x}" cy="${c.y}" r="3.5" fill="var(--panel)" stroke="${col}" stroke-width="2"/>`}
+        <circle class="nodehit" cx="${c.x}" cy="${c.y}" r="10" data-term="${c.id}:0" data-comp="${c.id}"/></g>`; return; }
+    const hb=c.type==='GND'?{x:-18,y:-22,w:36,h:40}:(c.type==='VM'||c.type==='AM')?{x:-30,y:-24,w:60,h:48}:{x:-30,y:-18,w:60,h:36};
+    let g=`<g class="${isSel?'sel':''}"><g transform="translate(${c.x},${c.y}) rotate(${90*(c.r||0)})">
+      <rect class="selbox" x="${hb.x-6}" y="${hb.y-6}" width="${hb.w+12}" height="${hb.h+12}" rx="6"/>
+      ${shapeOf(c,S)}<rect class="hitbox" x="${hb.x}" y="${hb.y}" width="${hb.w}" height="${hb.h}" data-comp="${c.id}"/></g>`;
+    if(c.type==='VM'||c.type==='AM'){ g+=`<text class="mlet" x="${c.x}" y="${c.y+1}">${c.type==='VM'?'V':'A'}</text>`;
+      const [px,py]=rot(-28,-12,c.r), [nx,ny]=rot(28,-12,c.r); g+=`<text class="pol p" x="${c.x+px}" y="${c.y+py}">+</text><text class="pol n" x="${c.x+nx}" y="${c.y+ny}">−</text>`;
+      const r=S.res[c.id], txt=c.type==='VM'?eng(r.v,'V'):eng(r.i,'A'), L=labelPos(c), wd=78;
+      const bx=L.anchor==='middle'?L.x-wd/2:L.anchor==='end'?L.x-wd+2:L.x-2; g+=`<rect class="lcd" x="${bx}" y="${L.y-12}" width="${wd}" height="24" rx="5"/><text class="lcdt" x="${bx+wd/2}" y="${L.y+1}">${txt}</text>`; }
+    else if(c.type==='VS'){ const [px,py]=rot(-14,-14,c.r); g+=`<text class="pol p" x="${c.x+px}" y="${c.y+py}">+</text>`; const L=labelPos(c); g+=`<text class="clabel" x="${L.x}" y="${L.y}" text-anchor="${L.anchor}">${c.label} = ${eng(c.v,'V')}</text>`; }
+    else if(c.type==='R'){ const L=labelPos(c); g+=`<text class="clabel" x="${L.x}" y="${L.y}" text-anchor="${L.anchor}">${c.label} = ${eng(c.ohm,'Ω')}</text>`; }
+    else if(c.type==='LED'){ const L=labelPos(c); g+=`<text class="cval" x="${L.x}" y="${L.y}" text-anchor="${L.anchor}">${c.label}${c.burnt?' · κάηκε!':''}</text>`; }
+    T.forEach((t,k)=>{ g+=`<circle class="termhit" cx="${t.x}" cy="${t.y}" r="9" data-term="${c.id}:${k}"/><circle class="term" cx="${t.x}" cy="${t.y}" r="4" style="pointer-events:none"/>`; });
+    h+=g+'</g>'; });
+  $('compsG').innerHTML=h;
+  renderSide(S); renderProps(); status(S); autosave();
+  if(!drag) commit(); $('undoBtn').disabled=hpos<=0; $('redoBtn').disabled=hpos>=hist.length-1;
+  $('rotBtn').disabled=!(sel&&sel.type==='comp'&&byId(sel.id)&&byId(sel.id).type!=='NODE'); $('delBtn').disabled=!sel;
+  $('flowBtn').classList.toggle('on',flowOn);
+}
+
+// ---------------- right panel ----------------
+function renderSide(S){
+  const M=comps.filter(c=>c.type==='VM'||c.type==='AM').sort((a,b)=>a.type.localeCompare(b.type)||a.id-b.id);
+  $('meters').innerHTML=M.length?M.map(c=>{ const r=S.res[c.id]; return `<div class="mrow"><span class="mi">${c.type==='VM'?'V':'A'}</span><span class="mn">${c.type==='VM'?'Βολτόμετρο':'Αμπερόμετρο'} ${c.label.replace(/\D/g,'')}</span><span class="mv">${c.type==='VM'?eng(r.v,'V'):eng(r.i,'A')}</span></div>`; }).join('')
+    :'<div class="empty">Δεν υπάρχουν όργανα. Σύρετε ένα <b>βολτόμετρο</b> (παράλληλα στο στοιχείο) ή ένα <b>αμπερόμετρο</b> (σε σειρά) από την παλέτα.</div>';
+  const show=$('showVals').checked; $('valBox').style.display=show?'':'none'; $('sideSp').style.display=show?'none':'';
+  if(show){ const E=comps.filter(c=>['VS','R','LED'].includes(c.type)).sort((a,b)=>'VSRLED'.indexOf(a.type)-'VSRLED'.indexOf(b.type)||a.label.localeCompare(b.label,undefined,{numeric:true}));
+    $('vt').innerHTML='<tr><th>Στοιχείο</th><th>Τάση</th><th>Ρεύμα</th><th>Ισχύς</th></tr>'+(E.length?E.map(c=>{ const r=S.res[c.id];
+      const v=c.type==='VS'?-r.v*0+r.v:r.v, i=c.type==='VS'?-r.i:r.i, p=Math.abs(v*i);
+      const nm=c.type==='R'?`${c.label} (${eng(c.ohm,'Ω')})`:c.type==='VS'?`${c.label} (πηγή)`:`${c.label} (${LEDC[c.color].n})`;
+      return `<tr><td>${nm}</td><td>${eng(Math.abs(v)<1e-9?0:v,'V')}</td><td>${eng(Math.abs(i)<1e-12?0:i,'A')}</td><td>${eng(p<1e-12?0:p,'W')}</td></tr>`; }).join(''):'<tr><td colspan="4" class="empty">Δεν υπάρχουν στοιχεία.</td></tr>'); }
+}
+$('showVals').onchange=()=>redraw();
+
+// ---------------- status bar ----------------
+function showMsg(cls,t){ const m=$('msg'), b=$('statusBar');
+  if(!cls){ m.className=''; m.innerHTML=''; b.className=''; $('hintTip').style.display=''; return; }
+  m.className='show '+cls; b.className=cls; $('hintTip').style.display='none';
+  m.innerHTML=`<span class="ic">${cls==='bad'?'⛔':'⚠️'}</span><span class="t"></span>`; m.querySelector('.t').textContent=t; m.title=t; }
+function flash(t,cls){ flashUntil=Date.now()+3500; showMsg(cls||'warn',t); setTimeout(()=>{ if(Date.now()>=flashUntil) redraw(); },3600); }
+function status(S){
+  const sc=sel&&sel.type==='comp'?byId(sel.id):null;
+  $('hintTip').textContent=sc?({VS:'Πηγή τάσης: το μακρύ πλακίδιο είναι ο θετικός πόλος (+). Αλλάξτε την τάση στο πλαίσιο κάτω αριστερά.',
+      R:'Αντίσταση: γράψτε την τιμή π.χ. 220, 1k, 4,7k, 1M.',LED:'LED: ανάβει όταν η άνοδος (τρίγωνο) είναι θετικότερη από την κάθοδο (γραμμή). Χρειάζεται αντίσταση σε σειρά.',
+      VM:'Βολτόμετρο: συνδέεται παράλληλα· δείχνει τη διαφορά δυναμικού ανάμεσα στο + και στο −.',AM:'Αμπερόμετρο: συνδέεται σε σειρά· δείχνει το ρεύμα που μπαίνει από το + και βγαίνει από το −.',
+      GND:'Γείωση: το σημείο αναφοράς (0 V). Όλες οι γειώσεις είναι ενωμένες μεταξύ τους.',NODE:'Κόμβος: σημείο διακλάδωσης· τραβήξτε από αυτόν για νέο καλώδιο.'}[sc.type])
+    : sel&&sel.type==='wire'&&wires.find(w=>w.id===sel.id)?(()=>{ const w=wires.find(x=>x.id===sel.id); return `Καλώδιο: δυναμικό ${eng(S.vAt(byId(w.a.c),w.a.k),'V')} ως προς τη γείωση. Σύρετε ένα τμήμα του για να το μετακινήσετε.`; })()
+    : 'Κλικ = επιλογή · Delete = διαγραφή · R = περιστροφή · τραβήξτε από ακροδέκτη σε ακροδέκτη για καλώδιο (σε κενό σημείο → κόμβος)';
+  if(Date.now()<flashUntil) return;
+  const vs=comps.filter(c=>c.type==='VS'), am=comps.filter(c=>c.type==='AM'), leds=comps.filter(c=>c.type==='LED');
+  const shortAM=am.find(c=>Math.abs(S.res[c.id].i)>ISHORT), shortVS=vs.find(c=>Math.abs(S.res[c.id].i)>ISHORT);
+  const burnt=leds.find(c=>S.burntNow.includes(c.id))||leds.find(c=>c.burnt);
+  const hotR=comps.find(c=>c.type==='R'&&Math.abs(S.res[c.id].v*S.res[c.id].i)>0.25);
+  const highLED=leds.find(c=>!c.burnt&&S.res[c.id].i>0.03);
+  if(!S.ok) showMsg('bad','Το κύκλωμα δεν μπόρεσε να λυθεί. Ελέγξτε τις συνδέσεις.');
+  else if(shortAM) showMsg('bad',`Το αμπερόμετρο ${shortAM.label.replace(/\D/g,'')} δείχνει ${eng(S.res[shortAM.id].i,'A')}: είναι σαν βραχυκύκλωμα! Το αμπερόμετρο συνδέεται σε σειρά, ποτέ παράλληλα στην πηγή.`);
+  else if(shortVS) showMsg('bad',`Βραχυκύκλωμα: η πηγή ${shortVS.label} δίνει ${eng(Math.abs(S.res[shortVS.id].i),'A')}! Κάπου οι πόλοι της ενώνονται χωρίς αντίσταση.`);
+  else if(burnt) showMsg('bad',`Το ${burnt.label} κάηκε, γιατί πέρασε πολύ μεγάλο ρεύμα. Βάλτε αντίσταση σε σειρά (π.χ. 220 Ω) και πατήστε «Νέο LED».`);
+  else if(highLED) showMsg('warn',`Το ${highLED.label} έχει ${eng(S.res[highLED.id].i,'A')}, πάνω από τα 20–30 mA που αντέχει. Μεγαλώστε την αντίσταση σε σειρά.`);
+  else if(hotR) showMsg('warn',`Η ${hotR.label} καταναλώνει ${eng(Math.abs(S.res[hotR.id].v*S.res[hotR.id].i),'W')}, περισσότερο από 1/4 W: μια συνηθισμένη αντίσταση θα ζεσταινόταν πολύ.`);
+  else showMsg(null);
+}
+
+// ---------------- properties box ----------------
+let propsKey='';
+function renderProps(){
+  const P=$('props'), c=sel&&sel.type==='comp'?byId(sel.id):null;
+  if(!c||c.type==='NODE'){ propsKey=''; P.className=''; P.innerHTML=''; return; }
+  const k=c.type+c.id+':'+(c.color||'')+(c.burnt?'b':''); if(propsKey===k) return; propsKey=k; P.className='show';
+  const rotB='<button data-rot title="Περιστροφή 90° (R)">↻</button>';
+  if(c.type==='VS'){ P.innerHTML=`<b>${c.label}:</b><input id="valIn" value="${String(c.v).replace('.',',')}"><span class="note">V</span>${[1.5,3,5,9,12].map(v=>`<button data-q="${v}">${String(v).replace('.',',')} V</button>`).join('')}${rotB}`; }
+  else if(c.type==='R'){ P.innerHTML=`<b>${c.label}:</b><input id="valIn" value="${eng(c.ohm,'').trim()}"><span class="note">Ω</span>${[100,220,330,470,'1k','10k'].map(v=>`<button data-q="${v}">${v}</button>`).join('')}
+      <button data-sym title="Σύμβολο αντίστασης">${resSym==='iec'?'▭':'⋀⋁'}</button>${rotB}`; }
+  else if(c.type==='LED'){ P.innerHTML=`<b>${c.label}:</b>${Object.keys(LEDC).map(n=>`<button data-col="${n}" class="${c.color===n?'on':''}"><span class="cdot" style="background:${LEDC[n].c}"></span>${LEDC[n].n}</button>`).join('')}${c.burnt?'<button data-fix class="primary">🔄 Νέο LED</button>':''}${rotB}`; }
+  else P.innerHTML=`<b>${NAMES[c.type]}</b>${rotB}`;
+  const I=P.querySelector('#valIn');
+  if(I){ const apply=()=>{ const v=parseVal(I.value), okv=c.type==='VS'?(isFinite(v)&&v>=0&&v<=30):(isFinite(v)&&v>=1&&v<=1e7);
+      I.classList.toggle('bad',!okv); if(okv){ if(c.type==='VS') c.v=v; else c.ohm=v; redraw(); } };
+    I.oninput=apply; I.onkeydown=ev=>{ if(ev.key==='Enter'||ev.key==='Escape') I.blur(); };
+    I.onblur=()=>{ I.value=c.type==='VS'?String(c.v).replace('.',','):eng(c.ohm,'').trim(); I.classList.remove('bad'); commit(); }; }
+  P.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>{ const v=parseVal(b.dataset.q); if(c.type==='VS') c.v=v; else c.ohm=v; propsKey=''; redraw(); });
+  P.querySelectorAll('[data-col]').forEach(b=>b.onclick=()=>{ c.color=b.dataset.col; redraw(); });
+  const fx=P.querySelector('[data-fix]'); if(fx) fx.onclick=()=>{ delete c.burnt; propsKey=''; redraw(); };
+  const sy=P.querySelector('[data-sym]'); if(sy) sy.onclick=()=>{ resSym=resSym==='iec'?'zig':'iec'; store.set('idouAnalogResSym',resSym); propsKey=''; buildPalette(); redraw(); };
+  P.querySelector('[data-rot]').onclick=rotateSel;
+}
+function rotateSel(){ const c=sel&&sel.type==='comp'?byId(sel.id):null; if(!c||c.type==='NODE') return; c.r=((c.r||0)+1)%4; wires.forEach(w=>{ if(w.a.c===c.id||w.b.c===c.id) delete w.mo; }); redraw(); }
+$('rotBtn').onclick=rotateSel;
+
+// ---------------- undo / redo ----------------
+let hist=[], hpos=-1;
+const stateStr=()=>JSON.stringify({c:comps,w:wires,n:nextId});
+function commit(){ if(document.activeElement&&document.activeElement.id==='valIn') return; const s=stateStr(); if(hist[hpos]===s) return; hist=hist.slice(0,hpos+1); hist.push(s); if(hist.length>100) hist.shift(); hpos=hist.length-1; }
+function restore(s){ const d=JSON.parse(s); comps=d.c; wires=d.w; nextId=d.n; sel=null; propsKey=''; }
+function undo(){ if(hpos>0){ hpos--; restore(hist[hpos]); redraw(); } }
+function redo(){ if(hpos<hist.length-1){ hpos++; restore(hist[hpos]); redraw(); } }
+$('undoBtn').onclick=undo; $('redoBtn').onclick=redo;
+
+// ---------------- pointer interaction ----------------
+function pt(ev){ const m=cv.getScreenCTM(); const q=new DOMPoint(ev.clientX,ev.clientY).matrixTransform(m.inverse()); return {x:q.x,y:q.y}; }
+function canvasSize(){ const r=cv.getBoundingClientRect(); return {w:Math.max(r.width,400),h:Math.max(r.height,300)}; }
+function startNew(ev,type){ ev.preventDefault(); if(comps.length>=60){ flash('Το πολύ 60 στοιχεία.'); return; }
+  const g=document.createElement('div'); g.className='ghost'; g.innerHTML=iconSVG(type); document.body.appendChild(g);
+  drag={kind:'new',type,ghost:g}; moveGhost(ev); }
+function moveGhost(ev){ drag.ghost.style.left=(ev.clientX-48)+'px'; drag.ghost.style.top=(ev.clientY-30)+'px'; }
+function placeNew(type,x,y){ const {w,h}=canvasSize(); x=Math.min(Math.max(x,50),w-50); y=Math.min(Math.max(y,40),h-40);
+  const c=addComp(type,x,y);
+  if(type==='NODE'){ const hit=wireAt(c.x,c.y); if(hit){ c.x=snap(hit.q.x); c.y=snap(hit.q.y); splitWire(hit.w,c); } }
+  sel={type:'comp',id:c.id}; redraw(); }
+function splitWire(w,n){ // both halves keep the shape of the original wire
+  const P=route(w)?route(w).pts:null; wires=wires.filter(x=>x!==w);
+  if(!P){ wires.push({id:nextId++,a:w.a,b:{c:n.id,k:0}},{id:nextId++,a:{c:n.id,k:0},b:w.b}); return; }
+  let s=0, best=1e9; for(let i=0;i<P.length-1;i++){ const m=distSeg(n,P[i],P[i+1]); if(m.d<best){ best=m.d; s=i; } }
+  const v1=P.slice(1,s+1), v2=P.slice(s+1,-1);
+  wires.push({id:nextId++,a:w.a,b:{c:n.id,k:0},...(v1.length?{via:v1}:{})},{id:nextId++,a:{c:n.id,k:0},b:w.b,...(v2.length?{via:v2}:{})}); }
+function termOf(el){ const t=el&&el.closest&&el.closest('[data-term]'); if(!t) return null; const [c,k]=t.dataset.term.split(':').map(Number); return {c,k}; }
+cv.addEventListener('pointerdown',ev=>{
+  if(drag) return; const p=pt(ev), t=ev.target;
+  const tm=termOf(t);
+  if(tm&&!(t.classList.contains('nodehit')&&sel&&sel.type==='comp'&&sel.id===tm.c)){ const c=byId(tm.c), T=terms(c)[tm.k];
+    drag={kind:'wire',from:tm,start:{x:T.x,y:T.y},moved:false,px:p.x,py:p.y,corners:[],dirs:[],dir:null}; cv.setPointerCapture(ev.pointerId); return; }
+  if(t.dataset.comp){ const c=byId(+t.dataset.comp); sel={type:'comp',id:c.id}; drag={kind:'move',id:c.id,dx:p.x-c.x,dy:p.y-c.y,moved:false}; cv.setPointerCapture(ev.pointerId); propsKey=''; redraw(); return; }
+  if(t.dataset.wire){ const w=wires.find(x=>x.id===+t.dataset.wire); sel={type:'wire',id:w.id};
+    drag={kind:'seg',id:w.id,i:+t.dataset.seg,px:p.x,py:p.y,moved:false}; cv.setPointerCapture(ev.pointerId); redraw(); return; }
+  sel=null; propsKey=''; redraw(); });
+window.addEventListener('pointermove',ev=>{
+  if(!drag) return;
+  if(drag.kind==='new'){ moveGhost(ev); return; }
+  const p=pt(ev), {w,h}=canvasSize();
+  if(drag.kind==='move'){ const c=byId(drag.id); if(!c) return; const nx=snap(Math.min(Math.max(p.x-drag.dx,30),w-30)), ny=snap(Math.min(Math.max(p.y-drag.dy,30),h-30));
+    if(nx!==c.x||ny!==c.y){ c.x=nx; c.y=ny; drag.moved=true; redraw(); } return; }
+  if(drag.kind==='seg'){ const wi=wires.find(x=>x.id===drag.id); if(!wi) return;
+    if(!drag.moved){ if(Math.hypot(p.x-drag.px,p.y-drag.py)<4) return; if(!startSegDrag(wi,drag)) { drag.kind='none'; return; } drag.moved=true; }
+    const v=drag.horiz?snap(p.y):snap(p.x); drag.j.forEach(j=>{ if(drag.horiz) wi.via[j].y=v; else wi.via[j].x=v; }); redraw(); return; }
+  if(drag.kind==='wire'){ if(Math.hypot(p.x-drag.px,p.y-drag.py)>4) drag.moved=true; const tmp=$('temp');
+    const m={x:p.x,y:p.y}; traceMove(drag,m); const pv=tracePreview(drag,{x:p.x,y:p.y});
+    tmp.style.display=''; tmp.setAttribute('d','M'+pv.map(q=>q.x+','+q.y).join(' L'));
+    document.querySelectorAll('.term.hot').forEach(e=>e.classList.remove('hot'));
+    const el=document.elementFromPoint(ev.clientX,ev.clientY), tm=termOf(el); if(tm&&el.nextElementSibling&&el.nextElementSibling.classList.contains('term')) el.nextElementSibling.classList.add('hot'); }
+});
+window.addEventListener('pointerup',ev=>{
+  if(!drag) return; const d=drag; drag=null;
+  if(d.kind==='new'){ d.ghost.remove(); const r=cv.getBoundingClientRect(); if(ev.clientX>=r.left&&ev.clientX<=r.right&&ev.clientY>=r.top&&ev.clientY<=r.bottom){ const q=pt(ev); placeNew(d.type,q.x,q.y); } return; }
+  if(d.kind==='wire'){ $('temp').style.display='none';
+    if(!d.moved){ const c=byId(d.from.c); if(c&&c.type==='NODE'){ sel={type:'comp',id:c.id}; drag=null; redraw(); } return; }
+    const el=document.elementFromPoint(ev.clientX,ev.clientY), tm=termOf(el), p=pt(ev);
+    if(tm){ if(tm.c===d.from.c&&tm.k===d.from.k) { redraw(); return; }
+      if(wires.some(w=>(w.a.c===d.from.c&&w.a.k===d.from.k&&w.b.c===tm.c&&w.b.k===tm.k)||(w.b.c===d.from.c&&w.b.k===d.from.k&&w.a.c===tm.c&&w.a.k===tm.k))){ flash('Αυτοί οι ακροδέκτες είναι ήδη ενωμένοι.'); redraw(); return; }
+      const T=terms(byId(tm.c))[tm.k], S0=terms(byId(d.from.c))[d.from.k], via=lCorner(d,T,[S0.dx,S0.dy],[T.dx,T.dy]); wires.push({id:nextId++,a:d.from,b:tm,...(via.length?{via}:{})}); redraw(); return; }
+    // dropped on a wire or on empty space: a new node there
+    if(comps.length>=60){ flash('Το πολύ 60 στοιχεία.'); redraw(); return; }
+    const hit=wireAt(p.x,p.y); const n=addComp('NODE',hit?hit.q.x:p.x,hit?hit.q.y:p.y);
+    if(hit) splitWire(hit.w,n); const S0=terms(byId(d.from.c))[d.from.k], via=lCorner(d,{x:n.x,y:n.y},[S0.dx,S0.dy],[0,0]); wires.push({id:nextId++,a:d.from,b:{c:n.id,k:0},...(via.length?{via}:{})}); redraw(); return; }
+  if(d.kind==='seg'){ const w=wires.find(x=>x.id===d.id); if(w&&w.via){ const r=route(w); w.via=r.pts.slice(1,-1); if(!w.via.length) delete w.via; } redraw(); return; }
+  if(d.kind==='move'){ const c=byId(d.id); // a free node dropped on a wire joins it
+    if(c&&c.type==='NODE'&&d.moved&&!wires.some(w=>w.a.c===c.id||w.b.c===c.id)){ const hit=wireAt(c.x,c.y); if(hit){ c.x=snap(hit.q.x); c.y=snap(hit.q.y); splitWire(hit.w,c); } }
+    redraw(); return; }
+  redraw(); });
+// turn the drawn route into waypoints and pick the two waypoints at the ends of the dragged piece;
+// a piece that touches a terminal gets a short fixed stub first, so the terminal itself never moves
+function startSegDrag(w,d){ const P=route(w).pts, n=P.length, i=d.i; if(i<0||i>=n-1) return false;
+  const a=P[i], b=P[i+1]; d.horiz=a.y===b.y; let via=P.slice(1,-1).map(q=>({x:q.x,y:q.y}));
+  const stub=(F,T)=>{ const L=Math.hypot(T.x-F.x,T.y-F.y)||1, k=Math.min(10,L/2); return {x:F.x+Math.round((T.x-F.x)/L*k),y:F.y+Math.round((T.y-F.y)/L*k)}; };
+  let j1=i-1, j2=i;
+  if(i===0){ const q=stub(a,b); via=[q,{...q},...via]; j1=1; j2=2; }
+  if(i+1===n-1){ const q=stub(b,a); via=[...via.slice(0,j2),{...q},q]; } // j2 now points at the copy next to B
+  w.via=via; d.j=[j1,j2]; return true; }
+function deleteSel(){ if(!sel) return;
+  if(sel.type==='wire') wires=wires.filter(w=>w.id!==sel.id);
+  else { const id=sel.id; comps=comps.filter(c=>c.id!==id); wires=wires.filter(w=>w.a.c!==id&&w.b.c!==id); }
+  sel=null; propsKey=''; redraw(); }
+$('delBtn').onclick=deleteSel;
+document.addEventListener('keydown',ev=>{
+  const tg=ev.target.tagName; if(tg==='INPUT'||tg==='TEXTAREA') return;
+  if(ev.key==='Delete'||ev.key==='Backspace'){ ev.preventDefault(); deleteSel(); }
+  if(ev.key==='r'||ev.key==='R'||ev.key==='ρ'||ev.key==='Ρ'){ if(!ev.ctrlKey&&!ev.metaKey) rotateSel(); }
+  if(ev.key==='Escape'){ const D=document.querySelector('details'); if(D.open){ D.open=false; return; } sel=null; propsKey=''; redraw(); }
+  if((ev.ctrlKey||ev.metaKey)&&!ev.altKey){ const k=ev.key.toLowerCase(); if(k==='z'&&!ev.shiftKey){ ev.preventDefault(); undo(); } else if(k==='y'||(k==='z'&&ev.shiftKey)){ ev.preventDefault(); redo(); } } });
+$('helpClose').onclick=()=>{ document.querySelector('details').open=false; };
+$('helpShade').onclick=()=>{ document.querySelector('details').open=false; };
+$('flowBtn').onclick=()=>{ flowOn=!flowOn; store.set('idouAnalogFlow',flowOn?'1':'0'); redraw(); };
+
+// ---------------- example, clear, save, open ----------------
+function example(){ comps=[]; wires=[]; nextId=1; sel=null;
+  const {w,h}=canvasSize(), cx=Math.max(300,snap(w/2-30)), cy=Math.max(200,snap(h/2));
+  const V=addComp('VS',cx-200,cy,{r:1,v:5}), R=addComp('R',cx-60,cy-120,{ohm:220}), A=addComp('AM',cx+80,cy-120),
+    n1=addComp('NODE',cx+170,cy-120), L=addComp('LED',cx+170,cy,{r:1,color:'red'}), M=addComp('VM',cx+270,cy,{r:1}),
+    n2=addComp('NODE',cx+170,cy+120), G=addComp('GND',cx-200,cy+140);
+  const W=(a,ka,b,kb,mo)=>wires.push({id:nextId++,a:{c:a.id,k:ka},b:{c:b.id,k:kb},...(mo!==undefined?{mo}:{})});
+  W(V,0,R,0); W(R,1,A,0); W(A,1,n1,0); W(n1,0,L,0); W(n1,0,M,0,0); W(L,1,n2,0); W(M,1,n2,0,70); W(n2,0,G,0); W(V,1,G,0);
+  title=''; $('titleIn').value=''; }
+$('exBtn').onclick=()=>{ example(); redraw(); };
+let clearArmed=null;
+function disarmClear(){ clearTimeout(clearArmed); clearArmed=null; $('clearBtn').innerHTML='⟲<span class="txt"> Καθαρισμός</span>'; $('clearBtn').classList.remove('primary'); }
+$('clearBtn').onclick=()=>{ if(comps.length&&!clearArmed){ $('clearBtn').innerHTML='⚠ Ξανά για σβήσιμο'; $('clearBtn').classList.add('primary'); clearArmed=setTimeout(disarmClear,3500); return; }
+  disarmClear(); comps=[]; wires=[]; nextId=1; sel=null; propsKey=''; redraw(); };
+function snapshot(){ return JSON.stringify({v:1,app:'idou-analog',title,comps,wires}); }
+function autosave(){ store.set(KEY,snapshot()); }
+function load(txt){ try{ const d=JSON.parse(txt); if(!d||!Array.isArray(d.comps)||!Array.isArray(d.wires)) return false;
+    const okT=Object.keys(TL); const cs=d.comps.filter(c=>c&&typeof c.id==='number'&&okT.includes(c.type)&&isFinite(c.x)&&isFinite(c.y));
+    cs.forEach(c=>{ c.r=[0,1,2,3].includes(c.r)?c.r:0; if(c.type==='VS') c.v=isFinite(c.v)?Math.min(Math.max(+c.v,0),30):5; if(c.type==='R') c.ohm=isFinite(c.ohm)?Math.min(Math.max(+c.ohm,1),1e7):220;
+      if(c.type==='LED'&&!LEDC[c.color]) c.color='red'; if(c.label) c.label=String(c.label).replace(/[^\p{L}\p{N}_]/gu,'').slice(0,8); });
+    const ids=new Set(cs.map(c=>c.id)); comps=cs; wires=d.wires.filter(w=>w&&w.a&&w.b&&ids.has(w.a.c)&&ids.has(w.b.c)&&Number.isInteger(w.a.k)&&Number.isInteger(w.b.k));
+    wires.forEach(w=>{ if(Array.isArray(w.via)) w.via=w.via.filter(q=>q&&isFinite(q.x)&&isFinite(q.y)).map(q=>({x:+q.x,y:+q.y})).slice(0,40); else delete w.via; if(w.via&&!w.via.length) delete w.via; });
+    nextId=Math.max(0,...comps.map(c=>c.id),...wires.map(w=>w.id||0))+1; wires.forEach(w=>{ if(typeof w.id!=='number') w.id=nextId++; });
+    title=typeof d.title==='string'?d.title.slice(0,60):''; $('titleIn').value=title; sel=null; propsKey=''; return true; }catch(e){ return false; } }
+function fileBase(){ return title.replace(/[\\/:*?"<>|]/g,'').replace(/\s+/g,' ').trim().slice(0,60)||'αναλογικό_κύκλωμα'; }
+function download(blob,name){ const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },500); }
+$('saveBtn').onclick=()=>download(new Blob([snapshot()],{type:'application/json'}),fileBase()+'.json');
+$('openBtn').onclick=()=>$('fileIn').click();
+$('fileIn').onchange=()=>{ const f=$('fileIn').files[0]; if(!f) return; const r=new FileReader(); r.onload=()=>{ if(!load(r.result)) flash('Το αρχείο δεν είναι κύκλωμα αυτής της εφαρμογής.','bad'); redraw(); }; r.readAsText(f); $('fileIn').value=''; };
+$('titleIn').oninput=()=>{ title=$('titleIn').value; autosave(); };
+$('titleIn').onkeydown=ev=>{ if(ev.key==='Enter'||ev.key==='Escape') $('titleIn').blur(); };
+
+// ---------------- PNG (circuit, in the light theme) ----------------
+const STYLE_PROPS=['fill','stroke','stroke-width','stroke-dasharray','stroke-linecap','stroke-linejoin','opacity','font-family','font-size','font-weight','text-anchor','dominant-baseline'];
+$('pngBtn').onclick=()=>{
+  const wasDark=document.body.classList.contains('dark'), keepSel=sel, keepFlow=flowOn; sel=null; flowOn=false;
+  if(wasDark) document.body.classList.remove('dark'); redraw();
+  const src=cv, cl=src.cloneNode(true), A=src.querySelectorAll('*'), B=cl.querySelectorAll('*');
+  A.forEach((el,i)=>{ const cs=getComputedStyle(el); B[i].setAttribute('style',STYLE_PROPS.map(p=>`${p}:${cs.getPropertyValue(p)}`).join(';')+(el.getAttribute('filter')?'':'')); });
+  cl.querySelectorAll('.termhit,.hitbox,.wirehit,.nodehit,.selbox,.selring,#temp,#bgRect').forEach(e=>e.remove());
+  let bb=null; [$('wiresG'),$('compsG')].forEach(g=>{ const b=g.getBBox(); if(!b.width&&!b.height) return; bb=bb?{x1:Math.min(bb.x1,b.x),y1:Math.min(bb.y1,b.y),x2:Math.max(bb.x2,b.x+b.width),y2:Math.max(bb.y2,b.y+b.height)}:{x1:b.x,y1:b.y,x2:b.x+b.width,y2:b.y+b.height}; });
+  if(wasDark) document.body.classList.add('dark'); sel=keepSel; flowOn=keepFlow; redraw();
+  if(!bb){ flash('Ο πίνακας είναι άδειος· δεν υπάρχει κύκλωμα για εικόνα.'); return; }
+  const pad=24, x=bb.x1-pad, y=bb.y1-pad, w=bb.x2-bb.x1+2*pad, h=bb.y2-bb.y1+2*pad;
+  cl.setAttribute('viewBox',`${x} ${y} ${w} ${h}`); cl.setAttribute('width',w); cl.setAttribute('height',h); cl.removeAttribute('id');
+  const img=new Image(); img.onload=()=>{ const tt=title.trim(), tH=tt?36:0, S=2, c=document.createElement('canvas'); c.width=(w+40)*S; c.height=(h+40+tH)*S;
+    const ctx=c.getContext('2d'); ctx.scale(S,S); ctx.fillStyle='#fff'; ctx.fillRect(0,0,w+40,h+40+tH);
+    if(tt){ ctx.fillStyle='#1d2433'; ctx.font='bold 22px Calibri,Carlito,"Segoe UI",Arial,sans-serif'; ctx.fillText(tt,20,20+22); }
+    ctx.drawImage(img,20,20+tH,w,h); c.toBlob(b=>download(b,fileBase()+'.png'),'image/png'); };
+  img.onerror=()=>flash('Δεν ήταν δυνατή η δημιουργία της εικόνας.','bad');
+  img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(new XMLSerializer().serializeToString(cl)); };
+
+// ---------------- start ----------------
+function fitToolbar(){ const tb=document.querySelector('.toolbar'); tb.classList.remove('compact'); if(tb.offsetHeight>44) tb.classList.add('compact'); }
+window.addEventListener('resize',()=>{ fitToolbar(); redraw(); });
+buildPalette(); fitToolbar();
+{ const s=store.get(KEY); if(!(s&&load(s))) example(); }
+redraw(); hist=[stateStr()]; hpos=0; $('undoBtn').disabled=true; $('redoBtn').disabled=true;
+</script>
+</body>
+</html>
