@@ -581,7 +581,9 @@ window.addEventListener('pointermove',ev=>{
   if(drag.kind==='new'){ moveGhost(ev); return; }
   const p=pt(ev), {w,h}=canvasSize();
   if(drag.kind==='move'){ const c=byId(drag.id); if(!c) return; const nx=snap(Math.min(Math.max(p.x-drag.dx,30),w-30)), ny=snap(Math.min(Math.max(p.y-drag.dy,30),h-30));
-    const ox=c.x, oy=c.y; c.x=nx; c.y=ny; if(c.type!=='NODE') magnet(c); if(c.x!==ox||c.y!==oy){ drag.moved=true; redraw(); } return; }
+    const ox=c.x, oy=c.y; c.x=nx; c.y=ny; if(c.type!=='NODE') magnet(c);
+    if(c.x!==ox||c.y!==oy){ if(!drag.moved) wires.forEach(w=>{ if((w.a.c===c.id||w.b.c===c.id)&&w.via) delete w.via; }); // hand-drawn corners would stay behind
+      drag.moved=true; redraw(); } return; }
   if(drag.kind==='seg'){ const wi=wires.find(x=>x.id===drag.id); if(!wi) return;
     if(!drag.moved){ if(Math.hypot(p.x-drag.px,p.y-drag.py)<4) return; if(!startSegDrag(wi,drag)) { drag.kind='none'; return; } drag.moved=true; }
     const v=drag.horiz?snap(p.y):snap(p.x); drag.j.forEach(j=>{ if(drag.horiz) wi.via[j].y=v; else wi.via[j].x=v; }); redraw(); return; }
