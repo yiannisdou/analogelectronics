@@ -363,6 +363,17 @@ function lCorner(d,T,dS,dT){ const S=d.start; if(!d.dir) return [];
   if(d.dir==='h'){ if(S.y===T.y) return []; return [{x:dT[0]?T.x+dT[0]*20:T.x,y:S.y}]; }
   if(S.x===T.x) return []; return [{x:dS[0]?S.x+dS[0]*20:S.x,y:T.y}]; }
 const tdir=T=>T.dx?'h':T.dy?'v':null;
+// as in the logic lab: a new wire with a one-square "step" is made straight by moving the part that has no other wires
+function alignWire(w){ const A=terms(byId(w.a.c))[w.a.k], B=terms(byId(w.b.c))[w.b.k]; if(!A||!B) return;
+  const dx=B.x-A.x, dy=B.y-A.y, deg=id=>wires.filter(x=>x.a.c===id||x.b.c===id).length, ok=c=>c&&c.type!=='NODE'&&deg(c.id)===1;
+  let ax=null; if(dy&&Math.abs(dy)<=10&&Math.abs(dx)>=20) ax='y'; else if(dx&&Math.abs(dx)<=10&&Math.abs(dy)>=20) ax='x'; if(!ax) return;
+  const cb=byId(w.b.c), ca=byId(w.a.c), d=ax==='y'?dy:dx; let c=null, sh=0; if(ok(cb)){ c=cb; sh=-d; } else if(ok(ca)){ c=ca; sh=d; } if(!c) return;
+  const {w:W,h:H}=canvasSize(), nv=c[ax]+sh; if(nv<30||nv>(ax==='y'?H:W)-30) return; c[ax]=nv; delete w.via; }
+function magnet(c){ // while moving: a step of one grid square snaps to a straight wire
+  let by=0, bx=0;
+  wires.forEach(w=>{ const side=w.a.c===c.id?'a':w.b.c===c.id?'b':null; if(!side) return; const me=terms(c)[w[side].k], o=w[side==='a'?'b':'a'], ot=terms(byId(o.c))[o.k]; if(!me||!ot) return;
+    const dx=ot.x-me.x, dy=ot.y-me.y; if(dy&&Math.abs(dy)<=10&&Math.abs(dx)>=20&&(!by||Math.abs(dy)<Math.abs(by))) by=dy; if(dx&&Math.abs(dx)<=10&&Math.abs(dy)>=20&&(!bx||Math.abs(dx)<Math.abs(bx))) bx=dx; });
+  c.y+=by; c.x+=bx; }
 function distSeg(p,a,b){ const dx=b.x-a.x, dy=b.y-a.y, L=dx*dx+dy*dy; let t=L?((p.x-a.x)*dx+(p.y-a.y)*dy)/L:0; t=Math.max(0,Math.min(1,t)); const q={x:a.x+t*dx,y:a.y+t*dy}; return {d:Math.hypot(p.x-q.x,p.y-q.y),q}; }
 function wireAt(x,y,skip){ let best=null; wires.forEach(w=>{ if(skip&&skip(w)) return; const r=route(w); if(!r) return; for(let i=0;i<r.pts.length-1;i++){ const m=distSeg({x,y},r.pts[i],r.pts[i+1]); if(m.d<9&&(!best||m.d<best.d)) best={w,d:m.d,q:m.q}; } }); return best; }
 
@@ -570,7 +581,7 @@ window.addEventListener('pointermove',ev=>{
   if(drag.kind==='new'){ moveGhost(ev); return; }
   const p=pt(ev), {w,h}=canvasSize();
   if(drag.kind==='move'){ const c=byId(drag.id); if(!c) return; const nx=snap(Math.min(Math.max(p.x-drag.dx,30),w-30)), ny=snap(Math.min(Math.max(p.y-drag.dy,30),h-30));
-    if(nx!==c.x||ny!==c.y){ c.x=nx; c.y=ny; drag.moved=true; redraw(); } return; }
+    const ox=c.x, oy=c.y; c.x=nx; c.y=ny; if(c.type!=='NODE') magnet(c); if(c.x!==ox||c.y!==oy){ drag.moved=true; redraw(); } return; }
   if(drag.kind==='seg'){ const wi=wires.find(x=>x.id===drag.id); if(!wi) return;
     if(!drag.moved){ if(Math.hypot(p.x-drag.px,p.y-drag.py)<4) return; if(!startSegDrag(wi,drag)) { drag.kind='none'; return; } drag.moved=true; }
     const v=drag.horiz?snap(p.y):snap(p.x); drag.j.forEach(j=>{ if(drag.horiz) wi.via[j].y=v; else wi.via[j].x=v; }); redraw(); return; }
@@ -588,7 +599,7 @@ window.addEventListener('pointerup',ev=>{
     const el=document.elementFromPoint(ev.clientX,ev.clientY), tm=termOf(el), p=pt(ev);
     if(tm){ if(tm.c===d.from.c&&tm.k===d.from.k) { redraw(); return; }
       if(wires.some(w=>(w.a.c===d.from.c&&w.a.k===d.from.k&&w.b.c===tm.c&&w.b.k===tm.k)||(w.b.c===d.from.c&&w.b.k===d.from.k&&w.a.c===tm.c&&w.a.k===tm.k))){ flash('Αυτοί οι ακροδέκτες είναι ήδη ενωμένοι.'); redraw(); return; }
-      const T=terms(byId(tm.c))[tm.k], S0=terms(byId(d.from.c))[d.from.k], via=lCorner(d,T,[S0.dx,S0.dy],[T.dx,T.dy]); wires.push({id:nextId++,a:d.from,b:tm,...(via.length?{via}:{})}); redraw(); return; }
+      const T=terms(byId(tm.c))[tm.k], S0=terms(byId(d.from.c))[d.from.k], via=lCorner(d,T,[S0.dx,S0.dy],[T.dx,T.dy]), nw={id:nextId++,a:d.from,b:tm,...(via.length?{via}:{})}; wires.push(nw); alignWire(nw); redraw(); return; }
     // dropped on a wire or on empty space: a new node there
     if(comps.length>=60){ flash('Το πολύ 60 στοιχεία.'); redraw(); return; }
     const hit=wireAt(p.x,p.y); const n=addComp('NODE',hit?hit.q.x:p.x,hit?hit.q.y:p.y);
