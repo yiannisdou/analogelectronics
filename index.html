@@ -2,13 +2,68 @@
 <html lang="el">
 <head>
 <meta charset="utf-8">
-<title>idou circuits (analog)</title>
-<meta http-equiv="refresh" content="0; url=idou-circuits-analog.html">
-<link rel="canonical" href="idou-circuits-analog.html">
-<style>body{font-family:Calibri,Arial,sans-serif;text-align:center;margin-top:80px;color:#333}</style>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Αναλογικά Ηλεκτρονικά · Προσομοιώσεις</title>
+<style>
+:root{--bg:#f4f6fa;--panel:#fff;--text:#1d2433;--muted:#5b6475;--line:#d5dbe5;--accent:#1f5fbf;--accent-soft:#e3edfb}
+body.dark{--bg:#121721;--panel:#1b2230;--text:#e6eaf2;--muted:#9aa4b6;--line:#2e3746;--accent:#6ea8ff;--accent-soft:#22324d}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font-family:Calibri,Carlito,"Segoe UI",Arial,sans-serif;font-size:16px;min-height:100vh}
+.wrap{max-width:1200px;margin:0 auto;padding:14px 18px 24px;display:flex;flex-direction:column;min-height:100vh}
+header{display:flex;align-items:center;gap:14px;margin-bottom:18px}
+header .titles{flex:1;min-width:0}
+h1{font-size:26px;margin:0;line-height:1.15}
+.subtitle{color:var(--muted);font-size:15px;margin-top:2px}
+a{color:var(--accent)}
+a.back{text-decoration:none;font-size:15px;white-space:nowrap}
+button{font-family:inherit;font-size:15px;cursor:pointer;border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:8px;padding:5px 11px;min-width:150px}
+button:hover{border-color:var(--accent)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;text-decoration:none;color:var(--text);display:flex;flex-direction:column;transition:transform .12s,box-shadow .12s,border-color .12s}
+.card:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(0,0,0,.12);border-color:var(--accent)}
+.card img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;border-bottom:1px solid var(--line)}
+.card .body{padding:10px 14px 14px}
+.card h2{font-size:19px;margin:0 0 4px}
+.card p{margin:0;color:var(--muted);font-size:15px;line-height:1.35}
+.tag{display:inline-block;margin-top:8px;font-size:13px;background:var(--accent-soft);color:var(--accent);border-radius:20px;padding:2px 10px}
+footer{margin-top:auto;padding-top:24px;color:var(--muted);font-size:13px;line-height:1.5;text-align:center}
+footer img{vertical-align:middle;margin-left:6px}
+</style>
 </head>
 <body>
-<p>Μεταφορά στο <a href="idou-circuits-analog.html">idou circuits (analog)</a>…</p>
-<script>location.replace('idou-circuits-analog.html'+location.search+location.hash);</script>
+<div class="wrap">
+  <header>
+    <a class="back" href="https://www.douflias.sites.sch.gr" target="_top">← douflias.sites.sch.gr</a>
+    <div class="titles">
+      <h1>Αναλογικά Ηλεκτρονικά · Προσομοιώσεις</h1>
+      <div class="subtitle">Β΄ ΕΠΑ.Λ · Τομέας Ηλεκτρολογίας, Ηλεκτρονικής και Αυτοματισμού</div>
+    </div>
+    <button id="themeBtn"></button>
+  </header>
+
+  <div class="grid">
+    <a class="card" data-sim href="idou-circuits-analog.html">
+      <img src="idou-circuits-analog_thumb.png" alt="idou circuits (analog)">
+      <div class="body">
+        <h2>idou circuits (analog)</h2>
+        <p>Στήστε κυκλώματα με πηγή, αντιστάσεις και LED, και μετρήστε τάσεις και ρεύματα με βολτόμετρο και αμπερόμετρο.</p>
+        <span class="tag">Νόμος του Ohm · LED · μετρήσεις</span>
+      </div>
+    </a>
+  </div>
+
+  <footer>
+    Ι. Δούφλιας · <a href="https://www.douflias.sites.sch.gr" target="_top">www.douflias.sites.sch.gr</a><br>
+    Κώδικας: MIT · Εκπαιδευτικό υλικό: <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.el" target="_blank" rel="noopener">CC BY-NC-SA 4.0</a>
+  </footer>
+</div>
+<script>
+const store={get(k){try{return localStorage.getItem(k);}catch(e){return null;}},set(k,v){try{localStorage.setItem(k,v);}catch(e){}}};
+function setTheme(d){ document.body.classList.toggle('dark',d); document.getElementById('themeBtn').textContent=d?'☀️ Φωτεινό θέμα':'🌙 Σκούρο θέμα';
+  document.querySelectorAll('a[data-sim]').forEach(a=>a.href=a.getAttribute('href').split('#')[0]+(d?'#dark':'#light')); }
+{ const h=(location.hash||'').toLowerCase(); setTheme(h==='#dark'?true:h==='#light'?false:store.get('gateSimTheme')==='dark'); }
+document.getElementById('themeBtn').onclick=()=>{ const d=!document.body.classList.contains('dark'); store.set('gateSimTheme',d?'dark':'light'); setTheme(d); };
+</script>
 </body>
 </html>
