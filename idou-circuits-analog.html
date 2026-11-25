@@ -141,7 +141,7 @@ details[open] #helpShade{display:block}
 <body>
 <div class="wrap">
   <header>
-    <a class="back" id="backLink" href="index.html">← Όλες οι προσομοιώσεις</a>
+    <a class="back" id="backLink" href="https://yiannisdou.github.io/Simulations/">← Όλες οι προσομοιώσεις</a>
     <div class="titles">
       <h1>idou circuits <span class="h1sub">· αναλογικά κυκλώματα</span></h1>
       <div class="subtitle">Στήστε κυκλώματα με πηγή, αντιστάσεις και LED, και μετρήστε τάσεις και ρεύματα με βολτόμετρο και αμπερόμετρο.</div>
@@ -209,7 +209,7 @@ let lastSol=null, flashUntil=0;
 
 // ---------------- theme ----------------
 function setTheme(d){ document.body.classList.toggle('dark',d); $('themeBtn').textContent=d?'☀️ Φωτεινό θέμα':'🌙 Σκούρο θέμα'; store.set('gateSimTheme',d?'dark':'light');
-  $('backLink').href='index.html'+(d?'#dark':'#light'); if(comps.length) redraw(); }
+  $('backLink').href='https://yiannisdou.github.io/Simulations/'+(d?'#dark':'#light'); if(comps.length) redraw(); }
 $('themeBtn').onclick=()=>setTheme(!document.body.classList.contains('dark'));
 { const h=(location.hash||'').toLowerCase(); setTheme(h==='#dark'?true:h==='#light'?false:store.get('gateSimTheme')==='dark'); }
 
@@ -691,7 +691,7 @@ $('pngBtn').onclick=()=>{
 function fitToolbar(){ const tb=document.querySelector('.toolbar'); tb.classList.remove('compact'); if(tb.offsetHeight>44) tb.classList.add('compact'); }
 window.addEventListener('resize',()=>{ fitToolbar(); redraw(); });
 buildPalette(); fitToolbar();
-{ const s=store.get(KEY); if(!(s&&load(s))) example(); }
+{ const s=store.get(KEY); if(!(s&&load(s))) setTimeout(()=>flash('Σύρετε εξαρτήματα από αριστερά για να στήσετε κύκλωμα, ή πατήστε «💡 Παράδειγμα» για ένα έτοιμο κύκλωμα με LED.'),400); }
 redraw(); hist=[stateStr()]; hpos=0; $('undoBtn').disabled=true; $('redoBtn').disabled=true;
 </script>
 </body>
