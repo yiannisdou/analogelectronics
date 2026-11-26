@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Αναλογικά Ηλεκτρονικά – Προσομοιώσεις θεωρίας</title>
+<style>
+:root{--bg:#f3f5f9;--panel:#fff;--ink:#1d2433;--muted:#5b6475;--line:#d5dae3;--accent:#1f6feb}
+body.dark{--bg:#12161f;--panel:#1b2130;--ink:#e6e9ef;--muted:#9aa3b5;--line:#2f3747;--accent:#58a6ff}
+body{font-family:Calibri,"Segoe UI",Carlito,Arial,sans-serif;background:var(--bg);color:var(--ink);margin:0;padding:18px 26px}
+header{display:flex;align-items:center;gap:16px}h1{margin:0;font-size:26px;flex:1}
+button{font-family:inherit;font-size:14px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:6px;padding:5px 12px;cursor:pointer;min-width:150px}
+h2{font-size:18px;color:var(--muted);margin:22px 0 8px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px}
+a.card{display:block;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;color:var(--ink);text-decoration:none}
+a.card:hover{border-color:var(--accent)}a.card b{display:block;font-size:17px;color:var(--accent);margin-bottom:4px}a.card span{font-size:14px;color:var(--muted)}
+</style>
+</head>
+<body>
+<header><h1>Αναλογικά Ηλεκτρονικά – Προσομοιώσεις θεωρίας</h1><button id="themeBtn">🌙 Σκούρο θέμα</button></header>
+<h2>Κεφ. 1 – Εισαγωγή στην Ηλεκτρονική</h2>
+<div class="grid"><a class="card" href="analog_digital.html"><b>Αναλογικό και ψηφιακό σήμα</b><span>Διαιρέτης τάσης, δειγματοληψία, κβάντιση, δυαδικός κώδικας</span></a></div>
+<h2>Κεφ. 2 – Ημιαγωγοί</h2>
+<div class="grid"><a class="card" href="semiconductors.html"><b>Ηλεκτρόνια, οπές και προσμίξεις</b><span>Θερμική διέγερση, τύπου N και P, ενεργειακές ζώνες</span></a></div>
+<h2>Κεφ. 3 – Κρυσταλλοδίοδοι</h2>
+<div class="grid">
+<a class="card" href="diode_loadline.html"><b>Δίοδος PN – ευθεία φόρτου</b><span>Ορθή/ανάστροφη πόλωση, Si/Ge, μοντέλα διόδου, σημείο Q</span></a>
+<a class="card" href="zener_regulator.html"><b>Σταθεροποιητής με Zener</b><span>V<sub>L</sub> = V<sub>Z</sub>, όρια I<sub>Zmin</sub>–I<sub>Zmax</sub>, επιλογή R</span></a>
+<a class="card" href="rectifiers.html"><b>Ανορθωτές και φίλτρο πυκνωτή</b><span>Ημιανόρθωση, μεσαία λήψη, γέφυρα, κυμάτωση</span></a>
+<a class="card" href="clippers.html"><b>Ψαλιδιστές και διπλασιαστής</b><span>Θετικός, αρνητικός, διπλός, με Zener, διπλασιαστής τάσης</span></a></div>
+<h2>Κεφ. 4 – Τρανζίστορ</h2>
+<div class="grid">
+<a class="card" href="bjt_ce.html"><b>NPN σε κοινό εκπομπό</b><span>Χαρακτηριστικές, ευθεία φόρτου, αποκοπή – ενεργός – κόρος</span></a>
+<a class="card" href="bjt_amplifier.html"><b>Ενισχυτής κοινού εκπομπού</b><span>Πόλωση με διαιρέτη, A<sub>V</sub> με/χωρίς C<sub>E</sub>, ψαλιδισμός</span></a>
+<a class="card" href="jfet.html"><b>JFET καναλιού N</b><span>Κανάλι, χαρακτηριστικές απαγωγού και διαγωγιμότητας</span></a></div>
+<h2>Κεφ. 7 – Στοιχεία τεσσάρων στρώσεων</h2>
+<div class="grid"><a class="card" href="thyristors.html"><b>Δίοδος Shockley, SCR, TRIAC</b><span>Μανδάλωση, παλμός πύλης, έλεγχος φάσης (dimmer)</span></a></div>
+<script>
+function setTheme(d){document.body.classList.toggle('dark',d);document.getElementById('themeBtn').textContent=d?'☀️ Φωτεινό θέμα':'🌙 Σκούρο θέμα';try{localStorage.setItem('gateSimTheme',d?'dark':'light');}catch(e){}
+ document.querySelectorAll('a.card').forEach(a=>{a.href=a.getAttribute('href').split('#')[0]+(d?'#dark':'#light');});}
+let d=false;try{d=localStorage.getItem('gateSimTheme')==='dark';}catch(e){}if(location.hash==='#dark')d=true;if(location.hash==='#light')d=false;setTheme(d);
+document.getElementById('themeBtn').onclick=()=>setTheme(!document.body.classList.contains('dark'));
+</script>
+</body>
+</html>

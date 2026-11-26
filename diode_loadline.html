@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Δίοδος PN – χαρακτηριστική και ευθεία φόρτου</title>
+<style>
+:root{--bg:#f3f5f9;--panel:#ffffff;--ink:#1d2433;--muted:#5b6475;--line:#d5dae3;--wire:#1d2433;--accent:#1f6feb;--hot:#e8411f;--cold:#8a94a6;--flow:#1f6feb;--grid:#e6e9ef;--good:#1a7f37;--warn:#c4410c;--soft:#eef2f8}
+body.dark{--bg:#12161f;--panel:#1b2130;--ink:#e6e9ef;--muted:#9aa3b5;--line:#2f3747;--wire:#d6dbe5;--accent:#58a6ff;--grid:#283042;--flow:#58a6ff;--good:#3fb950;--warn:#ff8a4c;--soft:#232b3b}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font-family:Calibri,"Segoe UI",Carlito,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:15px;display:flex;flex-direction:column;padding:8px 14px 6px}
+header{display:flex;align-items:center;gap:14px;flex:0 0 auto}
+header .ttl{flex:1;min-width:0}
+h1{font-size:22px;margin:0;line-height:1.15}
+.sub{color:var(--muted);font-size:14px;margin-top:1px}
+#back{color:var(--accent);text-decoration:none;font-size:14px;white-space:nowrap}
+button,select{font-family:inherit;font-size:14px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:6px;padding:4px 10px;cursor:pointer}
+button:hover{border-color:var(--accent)}
+button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+#themeBtn{min-width:150px}
+main{flex:1 1 auto;min-height:0;display:grid;grid-template-columns:1.4fr 1fr;gap:10px;margin-top:8px;align-items:stretch}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;min-height:0}
+.panel h2{font-size:15px;margin:0 0 4px;color:var(--muted);font-weight:600}
+.col{display:flex;flex-direction:column;gap:10px;min-height:0}
+.svgbox{flex:1 1 auto;min-height:0;display:flex;align-items:center;justify-content:center}
+.svgbox svg{width:100%;height:100%;max-height:100%}
+.ctrls{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:4px 14px;margin-top:4px}
+.ctrl{display:flex;flex-direction:column;font-size:14px}
+.ctrl .lab{display:flex;justify-content:space-between}
+.ctrl .lab b{color:var(--accent);font-weight:700}
+.ctrl input[type=range]{width:100%;accent-color:var(--accent);margin:2px 0}
+.row{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:4px}
+.plotbox{flex:1 1 auto;min-height:120px;position:relative}
+.plotbox canvas{position:absolute;inset:0;width:100%;height:100%}
+table.ro{border-collapse:collapse;width:100%;font-size:14.5px}
+table.ro td{padding:2px 6px;border-bottom:1px solid var(--line)}
+table.ro td:last-child{text-align:right;font-weight:700;white-space:nowrap}
+.status{margin-top:6px;padding:5px 8px;border-radius:6px;background:var(--soft);font-size:15px}
+.status.good{border-left:4px solid var(--good)}.status.warn{border-left:4px solid var(--warn)}
+details{flex:0 0 auto;margin-top:8px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:4px 12px}
+details summary{cursor:pointer;font-weight:700}
+details p{margin:6px 0;line-height:1.35}
+svg .w{stroke:var(--wire);fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+svg .wf{fill:var(--wire)}
+svg .comp{stroke:var(--wire);fill:none;stroke-width:2.4;stroke-linejoin:round}
+svg .compf{fill:var(--panel);stroke:var(--wire);stroke-width:2.4}
+svg .t{fill:var(--ink);font-family:Calibri,Carlito,Arial,sans-serif}
+svg .tm{fill:var(--muted);font-family:Calibri,Carlito,Arial,sans-serif}
+svg .ta{fill:var(--accent);font-family:Calibri,Carlito,Arial,sans-serif;font-weight:700}
+svg .flow{stroke:var(--flow);stroke-width:4;fill:none;stroke-dasharray:3 15;stroke-linecap:round}
+svg .on{stroke:var(--hot)!important}
+svg .onf{fill:var(--hot)!important}
+@media (max-width:1000px){main{grid-template-columns:1fr}body{height:auto}.svgbox{height:380px}.plotbox{height:300px}}
+
+</style>
+</head>
+<body>
+<header>
+  <a id="back" href="theory_index.html">← Όλες οι προσομοιώσεις</a>
+  <div class="ttl"><h1>Δίοδος PN – χαρακτηριστική και ευθεία φόρτου</h1><div class="sub">Άλλαξε την τάση της πηγής, την αντίσταση φόρτου και την πόλωση· παρατήρησε πώς μετακινείται το σημείο λειτουργίας Q.</div></div>
+  <label style="font-size:14px"><input type="checkbox" id="flowChk" checked> Εμφάνιση ροής ρεύματος</label>
+  <button id="themeBtn">🌙 Σκούρο θέμα</button>
+</header>
+<main>
+ <div class="panel"><h2>Κύκλωμα</h2>
+  <div class="svgbox"><svg id="sv" viewBox="0 0 640 360"></svg></div>
+  <div class="row"><span>Πόλωση:</span><button id="bF" class="on">Ορθή</button><button id="bR">Ανάστροφη</button>
+   <span style="margin-left:14px">Υλικό:</span><button id="mSi" class="on">Πυρίτιο (Si)</button><button id="mGe">Γερμάνιο (Ge)</button>
+   <span style="margin-left:14px">Μοντέλο:</span><select id="model"><option value="real">Πραγματική δίοδος</option><option value="ideal">Ιδανική (V<sub>γ</sub>=0)</option><option value="vg">Με τάση γόνατος V<sub>γ</sub></option><option value="vgr">Με V<sub>γ</sub> και R<sub>F</sub></option></select></div>
+  <div class="ctrls" id="ctl"></div>
+ </div>
+ <div class="col">
+  <div class="panel" style="flex:1"><h2>Χαρακτηριστική διόδου (συνεχής) και ευθεία φόρτου (διακεκομμένη)</h2><div class="plotbox"><canvas id="cv"></canvas></div></div>
+  <div class="panel"><table class="ro" id="ro"></table><div class="status" id="st"></div></div>
+ </div>
+</main>
+<details><summary>Πώς λειτουργεί</summary>
+<p><b>Ορθή πόλωση:</b> ο θετικός πόλος της πηγής είναι στην άνοδο. Μέχρι την τάση γόνατος (≈0,7 V για Si, ≈0,3 V για Ge) το ρεύμα είναι σχεδόν μηδέν· μετά αυξάνεται πολύ γρήγορα, ενώ η τάση της διόδου μένει σχεδόν σταθερή.</p>
+<p><b>Ευθεία φόρτου:</b> από τον κανόνα τάσεων του Kirchhoff, V<sub>D</sub> = V<sub>i</sub> − I<sub>D</sub>·R<sub>L</sub>. Η ευθεία τέμνει τον άξονα των τάσεων στο V<sub>i</sub> και τον άξονα των ρευμάτων στο V<sub>i</sub>/R<sub>L</sub>. Η τομή της με τη χαρακτηριστική είναι το σημείο λειτουργίας Q.</p>
+<p><b>Ανάστροφη πόλωση:</b> η δίοδος συμπεριφέρεται σαν ανοικτός διακόπτης· όλη η τάση της πηγής εμφανίζεται στη δίοδο και περνά μόνο το πολύ μικρό ανάστροφο ρεύμα κόρου I<sub>0</sub> (nA για Si, μA για Ge).</p>
+<p><b>Μοντέλα:</b> δοκίμασε τα V<sub>i</sub> = 12 V, R<sub>L</sub> = 1 kΩ, R<sub>F</sub> = 200 Ω (παράδειγμα 3.2.1) με την ιδανική δίοδο (12 mA) και με V<sub>γ</sub> και R<sub>F</sub> (9,4 mA).</p>
+</details>
+<script>
+// ---------- κοινά εργαλεία της σειράς ----------
+const $=id=>document.getElementById(id);
+const NS='http://www.w3.org/2000/svg';
+function fmt(x,d=2){if(!isFinite(x))return '∞';return x.toFixed(d).replace('.',',').replace('-','−');}
+function fmtU(x,unit,d=2){ // αυτόματα προθέματα
+  const a=Math.abs(x);let p='',k=1;
+  if(a>=1e6){p='M';k=1e-6}else if(a>=1e3&&unit==='Ω'){p='k';k=1e-3}else if(a<1e-3&&a>=1e-6){p='μ';k=1e6}else if(a<1&&a>=1e-3){p='m';k=1e3}else if(a<1e-6&&a>0){p='n';k=1e9}
+  return fmt(x*k,d)+' '+p+unit;}
+function el(tag,attrs,parent){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e;}
+function txt(parent,x,y,s,size=18,cls='t',anchor='middle',extra={}){const t=el('text',Object.assign({x,y,'font-size':size,class:cls,'text-anchor':anchor,'dominant-baseline':'middle'},extra),parent);t.innerHTML=s;return t;}
+// στοιχεία κυκλώματος (οριζόντια/κατακόρυφα), επιστρέφουν <g>
+function wire(p,pts,id){const d='M'+pts.map(q=>q.join(' ')).join(' L');return el('path',{d,class:'w',id:id||''},p);}
+function resistor(p,x1,y1,x2,y2,label,lx,ly,size=18){const g=el('g',{},p);const L=Math.hypot(x2-x1,y2-y1),ux=(x2-x1)/L,uy=(y2-y1)/L,nx=-uy,ny=ux;const a=L/2-26,b=L/2+26;
+ let d=`M${x1} ${y1} L${x1+ux*a} ${y1+uy*a}`;const n=6;for(let i=0;i<=n;i++){const s=a+(b-a)*i/n;const o=(i===0||i===n)?0:(i%2?9:-9);d+=` L${x1+ux*s+nx*o} ${y1+uy*s+ny*o}`;}d+=` L${x2} ${y2}`;
+ el('path',{d,class:'comp'},g);if(label)txt(g,lx,ly,label,size);return g;}
+function diode(p,x1,y1,x2,y2,opts={}){ // άνοδος (x1,y1) → κάθοδος (x2,y2)
+ const g=el('g',{},p);const L=Math.hypot(x2-x1,y2-y1),ux=(x2-x1)/L,uy=(y2-y1)/L,nx=-uy,ny=ux,c=[(x1+x2)/2,(y1+y2)/2],h=14;
+ const A=[c[0]-ux*h,c[1]-uy*h],K=[c[0]+ux*h,c[1]+uy*h];
+ el('path',{d:`M${x1} ${y1} L${A[0]} ${A[1]} M${K[0]} ${K[1]} L${x2} ${y2}`,class:'w'},g);
+ const tri=el('path',{d:`M${A[0]+nx*h} ${A[1]+ny*h} L${A[0]-nx*h} ${A[1]-ny*h} L${K[0]} ${K[1]} Z`,class:'compf'},g);
+ let bar=`M${K[0]+nx*h} ${K[1]+ny*h} L${K[0]-nx*h} ${K[1]-ny*h}`;
+ if(opts.zener)bar=`M${K[0]+nx*h-ux*6} ${K[1]+ny*h-uy*6} L${K[0]+nx*h} ${K[1]+ny*h} L${K[0]-nx*h} ${K[1]-ny*h} L${K[0]-nx*h+ux*6} ${K[1]-ny*h+uy*6}`;
+ const b=el('path',{d:bar,class:'comp'},g);
+ if(opts.gate){el('path',{d:`M${K[0]} ${K[1]} L${K[0]+nx*opts.gate} ${K[1]+ny*opts.gate+(opts.gdy||0)}`,class:'w'},g);}
+ if(opts.label)txt(g,opts.lx,opts.ly,opts.label,opts.size||18);
+ g.tri=tri;g.bar=b;return g;}
+function cap(p,x1,y1,x2,y2,label,lx,ly,pol){const g=el('g',{},p);const L=Math.hypot(x2-x1,y2-y1),ux=(x2-x1)/L,uy=(y2-y1)/L,nx=-uy,ny=ux,c=[(x1+x2)/2,(y1+y2)/2],gap=5,h=16;
+ el('path',{d:`M${x1} ${y1} L${c[0]-ux*gap} ${c[1]-uy*gap} M${c[0]+ux*gap} ${c[1]+uy*gap} L${x2} ${y2}`,class:'w'},g);
+ el('path',{d:`M${c[0]-ux*gap+nx*h} ${c[1]-uy*gap+ny*h} L${c[0]-ux*gap-nx*h} ${c[1]-uy*gap-ny*h} M${c[0]+ux*gap+nx*h} ${c[1]+uy*gap+ny*h} L${c[0]+ux*gap-nx*h} ${c[1]+uy*gap-ny*h}`,class:'comp','stroke-width':3.2},g);
+ if(pol)txt(g,c[0]-ux*14+nx*20,c[1]-uy*14+ny*20,'+',16);
+ if(label)txt(g,lx,ly,label,18);return g;}
+function ground(p,x,y){const g=el('g',{},p);el('path',{d:`M${x} ${y} L${x} ${y+10} M${x-14} ${y+10} L${x+14} ${y+10} M${x-9} ${y+16} L${x+9} ${y+16} M${x-4} ${y+22} L${x+4} ${y+22}`,class:'comp'},g);return g;}
+function battery(p,x,y1,y2,label,lx){ // κατακόρυφη, + πάνω
+ const g=el('g',{},p);const c=(y1+y2)/2;el('path',{d:`M${x} ${y1} L${x} ${c-5} M${x} ${c+5} L${x} ${y2}`,class:'w'},g);
+ el('path',{d:`M${x-18} ${c-5} L${x+18} ${c-5}`,class:'comp','stroke-width':3},g);el('path',{d:`M${x-9} ${c+5} L${x+9} ${c+5}`,class:'comp','stroke-width':5},g);
+ txt(g,x+24,c-14,'+',18);if(label)txt(g,lx===undefined?x-30:lx,c,label,18,'t','end');return g;}
+function acsrc(p,x,y1,y2,label,lx){const g=el('g',{},p);const c=(y1+y2)/2;el('path',{d:`M${x} ${y1} L${x} ${c-22} M${x} ${c+22} L${x} ${y2}`,class:'w'},g);el('circle',{cx:x,cy:c,r:22,class:'compf'},g);
+ el('path',{d:`M${x-13} ${c} q6.5 -14 13 0 t13 0`,class:'comp','stroke-width':2.2},g);if(label)txt(g,lx===undefined?x-30:lx,c,label,18,'t','end');return g;}
+function dot(p,x,y){return el('circle',{cx:x,cy:y,r:4.5,class:'wf'},p);}
+function lamp(p,x,y,r=18){const g=el('g',{},p);const glow=el('circle',{cx:x,cy:y,r:r+10,fill:'#ffd54a',opacity:0},g);const c=el('circle',{cx:x,cy:y,r,class:'compf'},g);
+ el('path',{d:`M${x-r*0.7} ${y-r*0.7} L${x+r*0.7} ${y+r*0.7} M${x+r*0.7} ${y-r*0.7} L${x-r*0.7} ${y+r*0.7}`,class:'comp'},g);g.set=b=>{glow.setAttribute('opacity',(0.85*b).toFixed(2));c.style.fill=b>0.02?`rgba(255,213,74,${0.3+0.7*b})`:'';};return g;}
+// ροή ρεύματος: κινούμενες κουκκίδες πάνω σε διαδρομές
+const flows=[];
+function flowPath(p,pts){const d='M'+pts.map(q=>q.join(' ')).join(' L');const e=el('path',{d,class:'flow'},p);const f={e,i:0,off:0};flows.push(f);return f;}
+function setFlow(f,i){f.i=i;}
+let lastT=performance.now();
+function flowLoop(t){const dt=Math.min(0.05,(t-lastT)/1000);lastT=t;const show=$('flowChk').checked;
+ for(const f of flows){const s=Math.sign(f.i)*Math.min(160,30+70*Math.log10(1+Math.abs(f.i)*1000));
+  if(!show||Math.abs(f.i)<1e-6){f.e.style.display='none';continue;}f.e.style.display='';f.off-=s*dt;f.e.style.strokeDashoffset=f.off;}
+ requestAnimationFrame(flowLoop);} requestAnimationFrame(flowLoop);
+// ρυθμιστές
+function slider(parent,id,label,min,max,step,val,show){const d=document.createElement('div');d.className='ctrl';
+ d.innerHTML=`<div class="lab"><span>${label}</span><b id="${id}V"></b></div><input type="range" id="${id}" min="${min}" max="${max}" step="${step}" value="${val}">`;
+ parent.appendChild(d);const inp=d.querySelector('input');const upd=()=>{$(id+'V').innerHTML=show(+inp.value);};inp.addEventListener('input',()=>{upd();update();});upd();return inp;}
+function logMap(v,a,b){return a*Math.pow(b/a,v/100);} // v 0..100
+// γραφήματα (canvas)
+function css(v){return getComputedStyle(document.body).getPropertyValue(v).trim();}
+function plot(cv,cfg){const r=cv.getBoundingClientRect();const dpr=window.devicePixelRatio||1;cv.width=r.width*dpr;cv.height=r.height*dpr;const c=cv.getContext('2d');c.setTransform(dpr,0,0,dpr,0,0);
+ c.clearRect(0,0,r.width,r.height);const subs=cfg.subs||[cfg];const H=r.height/subs.length;
+ subs.forEach((s,k)=>drawSub(c,s,8,k*H+6,r.width-14,H-8));}
+function niceTicks(a,b,n=6){const span=b-a,step0=span/n,m=Math.pow(10,Math.floor(Math.log10(step0)));const st=[1,2,2.5,5,10].map(v=>v*m).find(v=>span/v<=n)||m*10;const out=[];for(let v=Math.ceil(a/st)*st;v<=b+1e-9;v+=st)out.push(+v.toFixed(10));return {t:out,st};}
+function stext(c,str,x,y,align){str=String(str);const parts=[];const re=/_([A-Za-zΑ-Ωα-ω0-9]+)|_\{([^}]*)\}/g;let i=0,m;while((m=re.exec(str))){if(m.index>i)parts.push([str.slice(i,m.index),0]);parts.push([m[1]||m[2],1]);i=re.lastIndex;}if(i<str.length)parts.push([str.slice(i),0]);
+ const f=c.font,sz=parseFloat(f.match(/(\d+(\.\d+)?)px/)[1]),fs=f.replace(/\d+(\.\d+)?px/,(sz*0.75).toFixed(1)+'px');let w=0;parts.forEach(p=>{c.font=p[1]?fs:f;w+=c.measureText(p[0]).width;});
+ let x0=align==='center'?x-w/2:align==='right'?x-w:x;const ta=c.textAlign;c.textAlign='left';parts.forEach(p=>{c.font=p[1]?fs:f;c.fillText(p[0],x0,y+(p[1]?sz*0.3:0));x0+=c.measureText(p[0]).width;});c.font=f;c.textAlign=ta;return w;}
+function drawSub(c,s,X,Y,W,H){const L=X+52,T=Y+(s.title?20:6),R=X+W-(s.y2?52:10),B=Y+H-34;const ink=css('--ink'),mut=css('--muted'),grid=css('--grid');
+ const sx=x=>L+(x-s.xmin)/(s.xmax-s.xmin)*(R-L),sy=y=>B-(y-s.ymin)/(s.ymax-s.ymin)*(B-T);
+ c.font='13px Calibri,Carlito,Arial';c.lineWidth=1;
+ if(s.title){c.fillStyle=ink;c.textAlign='left';c.font='bold 14px Calibri,Carlito,Arial';stext(c,s.title,L,Y+12,'left');c.font='13px Calibri,Carlito,Arial';}
+ const xt=s.xticks||niceTicks(s.xmin,s.xmax,7).t, yt=s.yticks||niceTicks(s.ymin,s.ymax,5).t;
+ c.strokeStyle=grid;c.fillStyle=mut;
+ xt.forEach(v=>{const vv=typeof v==='object'?v.v:v,lab=typeof v==='object'?v.l:fmt(vv,Math.abs(vv)<10&&vv%1?1:0);c.beginPath();c.moveTo(sx(vv),T);c.lineTo(sx(vv),B);c.stroke();c.textAlign='center';c.fillText(lab,sx(vv),B+14);});
+ yt.forEach(v=>{const vv=typeof v==='object'?v.v:v,lab=typeof v==='object'?v.l:fmt(vv,Math.abs(vv)<10&&vv%1?1:0);c.beginPath();c.moveTo(L,sy(vv));c.lineTo(R,sy(vv));c.stroke();c.textAlign='right';c.fillText(lab,L-5,sy(vv)+4);});
+ c.strokeStyle=mut;c.lineWidth=1.3;c.beginPath();c.moveTo(L,T);c.lineTo(L,B);c.lineTo(R,B);c.stroke();
+ if(s.xmin<0&&s.xmax>0){c.beginPath();c.moveTo(sx(0),T);c.lineTo(sx(0),B);c.stroke();}
+ if(s.ymin<0&&s.ymax>0){c.beginPath();c.moveTo(L,sy(0));c.lineTo(R,sy(0));c.stroke();}
+ c.fillStyle=ink;stext(c,s.xlabel||'',R,B+28,'right');c.save();c.translate(X+12,(T+B)/2);c.rotate(-Math.PI/2);stext(c,s.ylabel||'',0,0,'center');c.restore();
+ c.save();c.beginPath();c.rect(L,T-2,R-L,B-T+4);c.clip();
+ (s.series||[]).forEach(se=>{c.strokeStyle=se.color||ink;c.lineWidth=se.w||2;c.setLineDash(se.dash||[]);c.beginPath();let first=true;
+  se.pts.forEach(([x,y])=>{if(!isFinite(y)){first=true;return;}const px=sx(x),py=sy(Math.max(s.ymin-(s.ymax-s.ymin),Math.min(s.ymax+(s.ymax-s.ymin),y)));if(first){c.moveTo(px,py);first=false;}else c.lineTo(px,py);});c.stroke();c.setLineDash([]);
+  if(se.label){c.fillStyle=se.color||ink;c.textAlign=se.la||'left';const p=se.lp||se.pts[se.pts.length-1];stext(c,se.label,sx(p[0])+(se.dx||4),sy(p[1])+(se.dy||-6),se.la||'left');}});
+ (s.bars||[]).forEach(b=>{c.fillStyle=b.color;c.fillRect(sx(b.x0),sy(b.y),sx(b.x1)-sx(b.x0),sy(s.ymin)-sy(b.y));});
+ (s.points||[]).forEach(p=>{c.fillStyle=p.color||css('--hot');c.beginPath();c.arc(sx(p.x),sy(p.y),p.r||6,0,7);c.fill();if(p.label){c.fillStyle=ink;c.font='bold 14px Calibri,Carlito,Arial';c.textAlign='left';stext(c,p.label,sx(p.x)+9,sy(p.y)-8,'left');c.font='13px Calibri,Carlito,Arial';}});
+ (s.vlines||[]).forEach(v=>{c.strokeStyle=v.color||mut;c.setLineDash(v.dash||[4,4]);c.beginPath();c.moveTo(sx(v.x),T);c.lineTo(sx(v.x),B);c.stroke();c.setLineDash([]);});
+ (s.hlines||[]).forEach(v=>{c.strokeStyle=v.color||mut;c.setLineDash(v.dash||[4,4]);c.beginPath();c.moveTo(L,sy(v.y));c.lineTo(R,sy(v.y));c.stroke();c.setLineDash([]);if(v.label){c.fillStyle=v.color||mut;c.textAlign='left';stext(c,v.label,L+4,sy(v.y)-4,'left');}});
+ c.restore();
+ if(s.legend){let tot=0;s.legend.forEach(l=>tot+=c.measureText(l.t).width+46);let lx=Math.max(L+8,R-tot),ly=T+12;c.fillStyle=css('--panel');c.globalAlpha=0.85;c.fillRect(lx-4,ly-10,tot,20);c.globalAlpha=1;c.textAlign='left';s.legend.forEach(l=>{c.strokeStyle=l.color;c.lineWidth=2.5;c.setLineDash(l.dash||[]);c.beginPath();c.moveTo(lx,ly);c.lineTo(lx+22,ly);c.stroke();c.setLineDash([]);c.fillStyle=ink;stext(c,l.t,lx+27,ly+4,'left');lx+=c.measureText(l.t).width+46;});}
+}
+// θέμα (κοινό για όλη τη σειρά)
+function setTheme(d){document.body.classList.toggle('dark',d);$('themeBtn').textContent=d?'☀️ Φωτεινό θέμα':'🌙 Σκούρο θέμα';try{localStorage.setItem('gateSimTheme',d?'dark':'light');}catch(e){}
+ const b=$('back');b.href='theory_index.html'+(d?'#dark':'#light');if(typeof redraw==='function')redraw();}
+(function(){let d=false;try{d=localStorage.getItem('gateSimTheme')==='dark';}catch(e){}if(location.hash==='#dark')d=true;if(location.hash==='#light')d=false;
+ if(window.self!==window.top)$('back').style.display='none';setTheme(d);$('themeBtn').onclick=()=>setTheme(!document.body.classList.contains('dark'));})();
+const C={hot:()=>css('--hot'),acc:()=>css('--accent'),ink:()=>css('--ink'),mut:()=>css('--muted'),good:()=>css('--good'),warn:()=>css('--warn')};
+</script>
+<script>
+const sv=$('sv');let fwd=true,mat='Si';
+const P={Si:{Is:1e-12,n:1.3,vg:0.7,I0:10e-9},Ge:{Is:1e-7,n:1.3,vg:0.3,I0:1e-6}};
+const ctl=$('ctl');
+const sVi=slider(ctl,'vi','Τάση πηγής V<sub>i</sub>',0,15,0.1,12,v=>fmt(v,1)+' V');
+const sR=slider(ctl,'rl','Αντίσταση φόρτου R<sub>L</sub>',0,100,1,50,v=>fmtU(rlv(v),'Ω',2));
+const sRf=slider(ctl,'rf','Αντίσταση ορθής φοράς R<sub>F</sub>',0,500,10,200,v=>fmt(v,0)+' Ω');
+function rlv(v){return Math.round(logMap(v,100,10000)/10)*10;}
+// ---- σχέδιο ----
+const g=el('g',{},sv);let dG,labVD,labVL,labVi,fl;
+function drawCircuit(){g.innerHTML='';flows.length=0;
+ battery(g,170,90,290,'',0);labVi=txt(g,140,190,'',20,'t','end');
+ wire(g,[[170,90],[170,60],[250,60]]);wire(g,[[390,60],[520,60],[520,120]]);
+ dG=diode(g,fwd?250:390,60,fwd?390:250,60);
+ txt(g,320,22,'D',20);labVD=txt(g,320,105,'',18,'ta');
+ resistor(g,520,120,520,260,'R<tspan font-size="13" dy="5">L</tspan>',548,165,20);
+ labVL=txt(g,545,210,'',18,'ta','start');
+ wire(g,[[520,260],[520,300],[170,300],[170,290]]);ground(g,345,300);
+ txt(g,250,40,fwd?'A':'K',16,'tm');txt(g,390,40,fwd?'K':'A',16,'tm');
+ fl=flowPath(g,[[170,80],[170,60],[520,60],[520,300],[170,300],[170,292]]);
+}
+drawCircuit();
+$('bF').onclick=()=>{fwd=true;$('bF').classList.add('on');$('bR').classList.remove('on');drawCircuit();update();};
+$('bR').onclick=()=>{fwd=false;$('bR').classList.add('on');$('bF').classList.remove('on');drawCircuit();update();};
+$('mSi').onclick=()=>{mat='Si';$('mSi').classList.add('on');$('mGe').classList.remove('on');update();};
+$('mGe').onclick=()=>{mat='Ge';$('mGe').classList.add('on');$('mSi').classList.remove('on');update();};
+$('model').onchange=update;
+function Id(V){const p=P[mat],m=$('model').value,rf=+sRf.value;
+ if(V<0)return -p.I0*(1+0.01*(-V));
+ if(m==='real')return p.Is*(Math.exp(V/(p.n*0.02585))-1);
+ if(m==='ideal')return V>0?1e9:0;
+ if(m==='vg')return V>p.vg?1e9*(V-p.vg):0;
+ return V>p.vg?(V-p.vg)/Math.max(rf,1e-3):0;}
+function solve(Vi,R){ // Vi>0 στην ορθή, βρίσκει V ώστε Vi=V+I R
+ let a=0,b=Vi;for(let k=0;k<80;k++){const m=(a+b)/2;if(m+Id(m)*R>Vi)b=m;else a=m;}return (a+b)/2;}
+let st={};
+function update(){const Vi=+sVi.value,R=rlv(+sR.value),p=P[mat],m=$('model').value;
+ sRf.parentElement.style.opacity=m==='vgr'?1:0.45;
+ let VD,I;
+ if(fwd){VD=solve(Vi,R);I=(Vi-VD)/R;}else{I=-p.I0*(1+0.01*Vi);VD=-(Vi+I*R);I=Math.abs(I);}
+ st={Vi,R,VD,I};
+ labVi.innerHTML='V<tspan font-size="13" dy="5">i</tspan><tspan dy="-5"> = '+fmt(Vi,1)+' V</tspan>';
+ labVD.textContent='V_D = '+fmt(Math.abs(VD),2)+' V';labVD.innerHTML='V<tspan font-size="13" dy="5">D</tspan><tspan dy="-5"> = '+fmt(fwd?VD:Math.abs(VD),2)+' V</tspan>';
+ labVL.innerHTML='V<tspan font-size="13" dy="5">L</tspan><tspan dy="-5"> = '+fmt(I*R,2)+' V</tspan>';
+ const on=fwd&&I>1e-4;dG.tri.classList.toggle('onf',on);
+ setFlow(fl,fwd?I:0);
+ const rows=[['Τάση διόδου V<sub>D</sub>',fmt(fwd?VD:-Math.abs(VD),3)+' V'],['Ρεύμα I<sub>D</sub>',fwd?fmtU(I,'A',2):'≈ '+fmtU(p.I0,'A',0)+' (I<sub>0</sub>)'],['Τάση φορτίου V<sub>L</sub> = I<sub>D</sub>·R<sub>L</sub>',fmt(I*R,3)+' V'],
+  ['Ισχύς διόδου P<sub>D</sub>',fmtU(Math.abs(VD)*I,'W',2)],['Ισχύς φορτίου P<sub>L</sub>',fmtU(I*I*R,'W',2)],['Τομές ευθείας: V<sub>i</sub> και V<sub>i</sub>/R<sub>L</sub>',fmt(Vi,1)+' V και '+fmtU(Vi/R,'A',2)]];
+ $('ro').innerHTML=rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('');
+ const s=$('st');if(!fwd){s.className='status warn';s.innerHTML='Ανάστροφη πόλωση: η δίοδος <b>δεν άγει</b> (ανοικτός διακόπτης) – V<sub>D</sub> ≈ −V<sub>i</sub>.';}
+ else if(I<1e-5){s.className='status warn';s.innerHTML='Ορθή πόλωση, αλλά V<sub>i</sub> μικρότερη από την τάση γόνατος: η δίοδος <b>πρακτικά δεν άγει</b>.';}
+ else{s.className='status good';s.innerHTML='Ορθή πόλωση: η δίοδος <b>άγει</b>. Σημείο Q: V<sub>Q</sub> = '+fmt(VD,2)+' V, I<sub>Q</sub> = '+fmtU(I,'A',2)+'.';}
+ redraw();}
+function redraw(){if(!st.R)return;const {Vi,R,VD,I}=st;const p=P[mat];
+ if(fwd){const xm=Math.max(1.2,Vi*1.05),ym=Math.max(1e-3,Vi/R)*1.15*1000;const pts=[];for(let k=0;k<=400;k++){const v=xm*k/400;pts.push([v,Math.min(Id(v),1e3)*1000]);}
+  plot($('cv'),{xmin:0,xmax:xm,ymin:0,ymax:ym,xlabel:'τάση διόδου (V)',ylabel:'ρεύμα διόδου (mA)',series:[{pts,color:C.ink(),w:2.5},{pts:[[0,Vi/R*1000],[Vi,0]],color:C.acc(),dash:[7,5],w:2}],
+   points:[{x:VD,y:I*1000,label:'Q'}],vlines:[{x:p.vg}],legend:[{t:'δίοδος '+mat,color:C.ink()},{t:'ευθεία φόρτου',color:C.acc(),dash:[7,5]}]});}
+ else{const xm=Math.max(1,Vi*1.1),k=p.I0*1e6,pts=[];for(let j=0;j<=200;j++){const v=-xm*j/200;pts.push([v,Id(v)*1e6]);}for(let j=0;j<=50;j++){const v=0.25*j/50;pts.unshift([v,Math.min(Id(v)*1e6,k*3)]);}
+  plot($('cv'),{xmin:-xm,xmax:0.3,ymin:-k*2.5,ymax:k*1.5,xlabel:'τάση διόδου (V)',ylabel:'ρεύμα διόδου (μA)',series:[{pts:pts.sort((a,b)=>a[0]-b[0]),color:C.ink(),w:2.5}],points:[{x:VD,y:-p.I0*1e6*(1+0.01*Vi),label:'Q'}],
+   hlines:[{y:-k,label:'−I₀ ≈ −'+fmtU(p.I0,'A',0)}]});}}
+new ResizeObserver(redraw).observe($('cv'));
+update();
+</script>
+</body>
+</html>

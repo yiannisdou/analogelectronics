@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ενισχυτής κοινού εκπομπού με πόλωση διαιρέτη τάσης</title>
+<style>
+:root{--bg:#f3f5f9;--panel:#ffffff;--ink:#1d2433;--muted:#5b6475;--line:#d5dae3;--wire:#1d2433;--accent:#1f6feb;--hot:#e8411f;--cold:#8a94a6;--flow:#1f6feb;--grid:#e6e9ef;--good:#1a7f37;--warn:#c4410c;--soft:#eef2f8}
+body.dark{--bg:#12161f;--panel:#1b2130;--ink:#e6e9ef;--muted:#9aa3b5;--line:#2f3747;--wire:#d6dbe5;--accent:#58a6ff;--grid:#283042;--flow:#58a6ff;--good:#3fb950;--warn:#ff8a4c;--soft:#232b3b}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font-family:Calibri,"Segoe UI",Carlito,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:15px;display:flex;flex-direction:column;padding:8px 14px 6px}
+header{display:flex;align-items:center;gap:14px;flex:0 0 auto}
+header .ttl{flex:1;min-width:0}
+h1{font-size:22px;margin:0;line-height:1.15}
+.sub{color:var(--muted);font-size:14px;margin-top:1px}
+#back{color:var(--accent);text-decoration:none;font-size:14px;white-space:nowrap}
+button,select{font-family:inherit;font-size:14px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:6px;padding:4px 10px;cursor:pointer}
+button:hover{border-color:var(--accent)}
+button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+#themeBtn{min-width:150px}
+main{flex:1 1 auto;min-height:0;display:grid;grid-template-columns:1.4fr 1fr;gap:10px;margin-top:8px;align-items:stretch}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;min-height:0}
+.panel h2{font-size:15px;margin:0 0 4px;color:var(--muted);font-weight:600}
+.col{display:flex;flex-direction:column;gap:10px;min-height:0}
+.svgbox{flex:1 1 auto;min-height:0;display:flex;align-items:center;justify-content:center}
+.svgbox svg{width:100%;height:100%;max-height:100%}
+.ctrls{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:4px 14px;margin-top:4px}
+.ctrl{display:flex;flex-direction:column;font-size:14px}
+.ctrl .lab{display:flex;justify-content:space-between}
+.ctrl .lab b{color:var(--accent);font-weight:700}
+.ctrl input[type=range]{width:100%;accent-color:var(--accent);margin:2px 0}
+.row{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:4px}
+.plotbox{flex:1 1 auto;min-height:120px;position:relative}
+.plotbox canvas{position:absolute;inset:0;width:100%;height:100%}
+table.ro{border-collapse:collapse;width:100%;font-size:14.5px}
+table.ro td{padding:2px 6px;border-bottom:1px solid var(--line)}
+table.ro td:last-child{text-align:right;font-weight:700;white-space:nowrap}
+.status{margin-top:6px;padding:5px 8px;border-radius:6px;background:var(--soft);font-size:15px}
+.status.good{border-left:4px solid var(--good)}.status.warn{border-left:4px solid var(--warn)}
+details{flex:0 0 auto;margin-top:8px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:4px 12px}
+details summary{cursor:pointer;font-weight:700}
+details p{margin:6px 0;line-height:1.35}
+svg .w{stroke:var(--wire);fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+svg .wf{fill:var(--wire)}
+svg .comp{stroke:var(--wire);fill:none;stroke-width:2.4;stroke-linejoin:round}
+svg .compf{fill:var(--panel);stroke:var(--wire);stroke-width:2.4}
+svg .t{fill:var(--ink);font-family:Calibri,Carlito,Arial,sans-serif}
+svg .tm{fill:var(--muted);font-family:Calibri,Carlito,Arial,sans-serif}
+svg .ta{fill:var(--accent);font-family:Calibri,Carlito,Arial,sans-serif;font-weight:700}
+svg .flow{stroke:var(--flow);stroke-width:4;fill:none;stroke-dasharray:3 15;stroke-linecap:round}
+svg .on{stroke:var(--hot)!important}
+svg .onf{fill:var(--hot)!important}
+@media (max-width:1000px){main{grid-template-columns:1fr}body{height:auto}.svgbox{height:380px}.plotbox{height:300px}}
+
+</style>
+</head>
+<body>
+<header>
+  <a id="back" href="theory_index.html">← Όλες οι προσομοιώσεις</a>
+  <div class="ttl"><h1>Ενισχυτής κοινού εκπομπού με πόλωση διαιρέτη τάσης</h1><div class="sub">Υπολόγισε το σημείο λειτουργίας και την απολαβή· βγάλε τον πυκνωτή C<sub>E</sub> ή μεγάλωσε το σήμα και δες τι αλλάζει στην έξοδο.</div></div>
+  <label style="font-size:14px"><input type="checkbox" id="flowChk" checked> Εμφάνιση ροής ρεύματος</label>
+  <button id="themeBtn">🌙 Σκούρο θέμα</button>
+</header>
+<main>
+ <div class="panel"><h2>Κύκλωμα</h2>
+  <div class="svgbox"><svg id="sv" viewBox="0 0 700 360"></svg></div>
+  <div class="row"><label><input type="checkbox" id="ce" checked> Πυκνωτής C<sub>E</sub> συνδεδεμένος</label><button id="ex" style="margin-left:12px">Παράδειγμα 4.4.1</button></div>
+  <div class="ctrls" id="ctl"></div>
+ </div>
+ <div class="col">
+  <div class="panel" style="flex:1"><h2>Σήμα εισόδου και εξόδου (f = 1 kHz)</h2><div class="plotbox"><canvas id="cv"></canvas></div></div>
+  <div class="panel"><table class="ro" id="ro"></table><div class="status" id="st"></div></div>
+ </div>
+</main>
+<details><summary>Πώς λειτουργεί</summary>
+<p><b>DC πόλωση:</b> ο διαιρέτης R1–R2 δίνει V<sub>B</sub> = V<sub>CC</sub>·R2/(R1+R2), άρα V<sub>E</sub> = V<sub>B</sub> − 0,7 V, I<sub>E</sub> = V<sub>E</sub>/R<sub>E</sub> ≈ I<sub>C</sub>, V<sub>C</sub> = V<sub>CC</sub> − I<sub>C</sub>·R<sub>C</sub>. Το β δεν χρειάζεται – άλλαξέ το και δες ότι το σημείο λειτουργίας σχεδόν δεν αλλάζει.</p>
+<p><b>AC ενίσχυση:</b> r<sub>e</sub> = 25 mV/I<sub>E</sub>, r<sub>L</sub> = R<sub>C</sub>∥R<sub>L</sub>. Με τον C<sub>E</sub>: A<sub>V</sub> = r<sub>L</sub>/r<sub>e</sub> (μεγάλη). Χωρίς τον C<sub>E</sub>: A<sub>V</sub> = r<sub>L</sub>/(r<sub>e</sub> + R<sub>E</sub>) (μικρή αλλά σταθερή).</p>
+<p><b>Φάση:</b> η έξοδος έχει διαφορά φάσης 180° από την είσοδο – όταν η είσοδος αυξάνεται, η έξοδος ελαττώνεται.</p>
+<p><b>Ψαλιδισμός:</b> αν το σήμα εισόδου γίνει πολύ μεγάλο, η έξοδος "κόβεται" (το τρανζίστορ φτάνει στον κόρο ή στην αποκοπή) και το σήμα παραμορφώνεται.</p>
+</details>
+<script>
+// ---------- κοινά εργαλεία της σειράς ----------
+const $=id=>document.getElementById(id);
+const NS='http://www.w3.org/2000/svg';
+function fmt(x,d=2){if(!isFinite(x))return '∞';return x.toFixed(d).replace('.',',').replace('-','−');}
+function fmtU(x,unit,d=2){ // αυτόματα προθέματα
+  const a=Math.abs(x);let p='',k=1;
+  if(a>=1e6){p='M';k=1e-6}else if(a>=1e3&&unit==='Ω'){p='k';k=1e-3}else if(a<1e-3&&a>=1e-6){p='μ';k=1e6}else if(a<1&&a>=1e-3){p='m';k=1e3}else if(a<1e-6&&a>0){p='n';k=1e9}
+  return fmt(x*k,d)+' '+p+unit;}
+function el(tag,attrs,parent){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e;}
+function txt(parent,x,y,s,size=18,cls='t',anchor='middle',extra={}){const t=el('text',Object.assign({x,y,'font-size':size,class:cls,'text-anchor':anchor,'dominant-baseline':'middle'},extra),parent);t.innerHTML=s;return t;}
+// στοιχεία κυκλώματος (οριζόντια/κατακόρυφα), επιστρέφουν <g>
+function wire(p,pts,id){const d='M'+pts.map(q=>q.join(' ')).join(' L');return el('path',{d,class:'w',id:id||''},p);}
+function resistor(p,x1,y1,x2,y2,label,lx,ly,size=18){const g=el('g',{},p);const L=Math.hypot(x2-x1,y2-y1),ux=(x2-x1)/L,uy=(y2-y1)/L,nx=-uy,ny=ux;const a=L/2-26,b=L/2+26;
+ let d=`M${x1} ${y1} L${x1+ux*a} ${y1+uy*a}`;const n=6;for(let i=0;i<=n;i++){const s=a+(b-a)*i/n;const o=(i===0||i===n)?0:(i%2?9:-9);d+=` L${x1+ux*s+nx*o} ${y1+uy*s+ny*o}`;}d+=` L${x2} ${y2}`;
+ el('path',{d,class:'comp'},g);if(label)txt(g,lx,ly,label,size);return g;}
+function diode(p,x1,y1,x2,y2,opts={}){ // άνοδος (x1,y1) → κάθοδος (x2,y2)
+ const g=el('g',{},p);const L=Math.hypot(x2-x1,y2-y1),ux=(x2-x1)/L,uy=(y2-y1)/L,nx=-uy,ny=ux,c=[(x1+x2)/2,(y1+y2)/2],h=14;
+ const A=[c[0]-ux*h,c[1]-uy*h],K=[c[0]+ux*h,c[1]+uy*h];
+ el('path',{d:`M${x1} ${y1} L${A[0]} ${A[1]} M${K[0]} ${K[1]} L${x2} ${y2}`,class:'w'},g);
+ const tri=el('path',{d:`M${A[0]+nx*h} ${A[1]+ny*h} L${A[0]-nx*h} ${A[1]-ny*h} L${K[0]} ${K[1]} Z`,class:'compf'},g);
+ let bar=`M${K[0]+nx*h} ${K[1]+ny*h} L${K[0]-nx*h} ${K[1]-ny*h}`;
+ if(opts.zener)bar=`M${K[0]+nx*h-ux*6} ${K[1]+ny*h-uy*6} L${K[0]+nx*h} ${K[1]+ny*h} L${K[0]-nx*h} ${K[1]-ny*h} L${K[0]-nx*h+ux*6} ${K[1]-ny*h+uy*6}`;
+ const b=el('path',{d:bar,class:'comp'},g);
+ if(opts.gate){el('path',{d:`M${K[0]} ${K[1]} L${K[0]+nx*opts.gate} ${K[1]+ny*opts.gate+(opts.gdy||0)}`,class:'w'},g);}
+ if(opts.label)txt(g,opts.lx,opts.ly,opts.label,opts.size||18);
+ g.tri=tri;g.bar=b;return g;}
+function cap(p,x1,y1,x2,y2,label,lx,ly,pol){const g=el('g',{},p);const L=Math.hypot(x2-x1,y2-y1),ux=(x2-x1)/L,uy=(y2-y1)/L,nx=-uy,ny=ux,c=[(x1+x2)/2,(y1+y2)/2],gap=5,h=16;
+ el('path',{d:`M${x1} ${y1} L${c[0]-ux*gap} ${c[1]-uy*gap} M${c[0]+ux*gap} ${c[1]+uy*gap} L${x2} ${y2}`,class:'w'},g);
+ el('path',{d:`M${c[0]-ux*gap+nx*h} ${c[1]-uy*gap+ny*h} L${c[0]-ux*gap-nx*h} ${c[1]-uy*gap-ny*h} M${c[0]+ux*gap+nx*h} ${c[1]+uy*gap+ny*h} L${c[0]+ux*gap-nx*h} ${c[1]+uy*gap-ny*h}`,class:'comp','stroke-width':3.2},g);
+ if(pol)txt(g,c[0]-ux*14+nx*20,c[1]-uy*14+ny*20,'+',16);
+ if(label)txt(g,lx,ly,label,18);return g;}
+function ground(p,x,y){const g=el('g',{},p);el('path',{d:`M${x} ${y} L${x} ${y+10} M${x-14} ${y+10} L${x+14} ${y+10} M${x-9} ${y+16} L${x+9} ${y+16} M${x-4} ${y+22} L${x+4} ${y+22}`,class:'comp'},g);return g;}
+function battery(p,x,y1,y2,label,lx){ // κατακόρυφη, + πάνω
+ const g=el('g',{},p);const c=(y1+y2)/2;el('path',{d:`M${x} ${y1} L${x} ${c-5} M${x} ${c+5} L${x} ${y2}`,class:'w'},g);
+ el('path',{d:`M${x-18} ${c-5} L${x+18} ${c-5}`,class:'comp','stroke-width':3},g);el('path',{d:`M${x-9} ${c+5} L${x+9} ${c+5}`,class:'comp','stroke-width':5},g);
+ txt(g,x+24,c-14,'+',18);if(label)txt(g,lx===undefined?x-30:lx,c,label,18,'t','end');return g;}
+function acsrc(p,x,y1,y2,label,lx){const g=el('g',{},p);const c=(y1+y2)/2;el('path',{d:`M${x} ${y1} L${x} ${c-22} M${x} ${c+22} L${x} ${y2}`,class:'w'},g);el('circle',{cx:x,cy:c,r:22,class:'compf'},g);
+ el('path',{d:`M${x-13} ${c} q6.5 -14 13 0 t13 0`,class:'comp','stroke-width':2.2},g);if(label)txt(g,lx===undefined?x-30:lx,c,label,18,'t','end');return g;}
+function dot(p,x,y){return el('circle',{cx:x,cy:y,r:4.5,class:'wf'},p);}
+function lamp(p,x,y,r=18){const g=el('g',{},p);const glow=el('circle',{cx:x,cy:y,r:r+10,fill:'#ffd54a',opacity:0},g);const c=el('circle',{cx:x,cy:y,r,class:'compf'},g);
+ el('path',{d:`M${x-r*0.7} ${y-r*0.7} L${x+r*0.7} ${y+r*0.7} M${x+r*0.7} ${y-r*0.7} L${x-r*0.7} ${y+r*0.7}`,class:'comp'},g);g.set=b=>{glow.setAttribute('opacity',(0.85*b).toFixed(2));c.style.fill=b>0.02?`rgba(255,213,74,${0.3+0.7*b})`:'';};return g;}
+// ροή ρεύματος: κινούμενες κουκκίδες πάνω σε διαδρομές
+const flows=[];
+function flowPath(p,pts){const d='M'+pts.map(q=>q.join(' ')).join(' L');const e=el('path',{d,class:'flow'},p);const f={e,i:0,off:0};flows.push(f);return f;}
+function setFlow(f,i){f.i=i;}
+let lastT=performance.now();
+function flowLoop(t){const dt=Math.min(0.05,(t-lastT)/1000);lastT=t;const show=$('flowChk').checked;
+ for(const f of flows){const s=Math.sign(f.i)*Math.min(160,30+70*Math.log10(1+Math.abs(f.i)*1000));
+  if(!show||Math.abs(f.i)<1e-6){f.e.style.display='none';continue;}f.e.style.display='';f.off-=s*dt;f.e.style.strokeDashoffset=f.off;}
+ requestAnimationFrame(flowLoop);} requestAnimationFrame(flowLoop);
+// ρυθμιστές
+function slider(parent,id,label,min,max,step,val,show){const d=document.createElement('div');d.className='ctrl';
+ d.innerHTML=`<div class="lab"><span>${label}</span><b id="${id}V"></b></div><input type="range" id="${id}" min="${min}" max="${max}" step="${step}" value="${val}">`;
+ parent.appendChild(d);const inp=d.querySelector('input');const upd=()=>{$(id+'V').innerHTML=show(+inp.value);};inp.addEventListener('input',()=>{upd();update();});upd();return inp;}
+function logMap(v,a,b){return a*Math.pow(b/a,v/100);} // v 0..100
+// γραφήματα (canvas)
+function css(v){return getComputedStyle(document.body).getPropertyValue(v).trim();}
+function plot(cv,cfg){const r=cv.getBoundingClientRect();const dpr=window.devicePixelRatio||1;cv.width=r.width*dpr;cv.height=r.height*dpr;const c=cv.getContext('2d');c.setTransform(dpr,0,0,dpr,0,0);
+ c.clearRect(0,0,r.width,r.height);const subs=cfg.subs||[cfg];const H=r.height/subs.length;
+ subs.forEach((s,k)=>drawSub(c,s,8,k*H+6,r.width-14,H-8));}
+function niceTicks(a,b,n=6){const span=b-a,step0=span/n,m=Math.pow(10,Math.floor(Math.log10(step0)));const st=[1,2,2.5,5,10].map(v=>v*m).find(v=>span/v<=n)||m*10;const out=[];for(let v=Math.ceil(a/st)*st;v<=b+1e-9;v+=st)out.push(+v.toFixed(10));return {t:out,st};}
+function stext(c,str,x,y,align){str=String(str);const parts=[];const re=/_([A-Za-zΑ-Ωα-ω0-9]+)|_\{([^}]*)\}/g;let i=0,m;while((m=re.exec(str))){if(m.index>i)parts.push([str.slice(i,m.index),0]);parts.push([m[1]||m[2],1]);i=re.lastIndex;}if(i<str.length)parts.push([str.slice(i),0]);
+ const f=c.font,sz=parseFloat(f.match(/(\d+(\.\d+)?)px/)[1]),fs=f.replace(/\d+(\.\d+)?px/,(sz*0.75).toFixed(1)+'px');let w=0;parts.forEach(p=>{c.font=p[1]?fs:f;w+=c.measureText(p[0]).width;});
+ let x0=align==='center'?x-w/2:align==='right'?x-w:x;const ta=c.textAlign;c.textAlign='left';parts.forEach(p=>{c.font=p[1]?fs:f;c.fillText(p[0],x0,y+(p[1]?sz*0.3:0));x0+=c.measureText(p[0]).width;});c.font=f;c.textAlign=ta;return w;}
+function drawSub(c,s,X,Y,W,H){const L=X+52,T=Y+(s.title?20:6),R=X+W-(s.y2?52:10),B=Y+H-34;const ink=css('--ink'),mut=css('--muted'),grid=css('--grid');
+ const sx=x=>L+(x-s.xmin)/(s.xmax-s.xmin)*(R-L),sy=y=>B-(y-s.ymin)/(s.ymax-s.ymin)*(B-T);
+ c.font='13px Calibri,Carlito,Arial';c.lineWidth=1;
+ if(s.title){c.fillStyle=ink;c.textAlign='left';c.font='bold 14px Calibri,Carlito,Arial';stext(c,s.title,L,Y+12,'left');c.font='13px Calibri,Carlito,Arial';}
+ const xt=s.xticks||niceTicks(s.xmin,s.xmax,7).t, yt=s.yticks||niceTicks(s.ymin,s.ymax,5).t;
+ c.strokeStyle=grid;c.fillStyle=mut;
+ xt.forEach(v=>{const vv=typeof v==='object'?v.v:v,lab=typeof v==='object'?v.l:fmt(vv,Math.abs(vv)<10&&vv%1?1:0);c.beginPath();c.moveTo(sx(vv),T);c.lineTo(sx(vv),B);c.stroke();c.textAlign='center';c.fillText(lab,sx(vv),B+14);});
+ yt.forEach(v=>{const vv=typeof v==='object'?v.v:v,lab=typeof v==='object'?v.l:fmt(vv,Math.abs(vv)<10&&vv%1?1:0);c.beginPath();c.moveTo(L,sy(vv));c.lineTo(R,sy(vv));c.stroke();c.textAlign='right';c.fillText(lab,L-5,sy(vv)+4);});
+ c.strokeStyle=mut;c.lineWidth=1.3;c.beginPath();c.moveTo(L,T);c.lineTo(L,B);c.lineTo(R,B);c.stroke();
+ if(s.xmin<0&&s.xmax>0){c.beginPath();c.moveTo(sx(0),T);c.lineTo(sx(0),B);c.stroke();}
+ if(s.ymin<0&&s.ymax>0){c.beginPath();c.moveTo(L,sy(0));c.lineTo(R,sy(0));c.stroke();}
+ c.fillStyle=ink;stext(c,s.xlabel||'',R,B+28,'right');c.save();c.translate(X+12,(T+B)/2);c.rotate(-Math.PI/2);stext(c,s.ylabel||'',0,0,'center');c.restore();
+ c.save();c.beginPath();c.rect(L,T-2,R-L,B-T+4);c.clip();
+ (s.series||[]).forEach(se=>{c.strokeStyle=se.color||ink;c.lineWidth=se.w||2;c.setLineDash(se.dash||[]);c.beginPath();let first=true;
+  se.pts.forEach(([x,y])=>{if(!isFinite(y)){first=true;return;}const px=sx(x),py=sy(Math.max(s.ymin-(s.ymax-s.ymin),Math.min(s.ymax+(s.ymax-s.ymin),y)));if(first){c.moveTo(px,py);first=false;}else c.lineTo(px,py);});c.stroke();c.setLineDash([]);
+  if(se.label){c.fillStyle=se.color||ink;c.textAlign=se.la||'left';const p=se.lp||se.pts[se.pts.length-1];stext(c,se.label,sx(p[0])+(se.dx||4),sy(p[1])+(se.dy||-6),se.la||'left');}});
+ (s.bars||[]).forEach(b=>{c.fillStyle=b.color;c.fillRect(sx(b.x0),sy(b.y),sx(b.x1)-sx(b.x0),sy(s.ymin)-sy(b.y));});
+ (s.points||[]).forEach(p=>{c.fillStyle=p.color||css('--hot');c.beginPath();c.arc(sx(p.x),sy(p.y),p.r||6,0,7);c.fill();if(p.label){c.fillStyle=ink;c.font='bold 14px Calibri,Carlito,Arial';c.textAlign='left';stext(c,p.label,sx(p.x)+9,sy(p.y)-8,'left');c.font='13px Calibri,Carlito,Arial';}});
+ (s.vlines||[]).forEach(v=>{c.strokeStyle=v.color||mut;c.setLineDash(v.dash||[4,4]);c.beginPath();c.moveTo(sx(v.x),T);c.lineTo(sx(v.x),B);c.stroke();c.setLineDash([]);});
+ (s.hlines||[]).forEach(v=>{c.strokeStyle=v.color||mut;c.setLineDash(v.dash||[4,4]);c.beginPath();c.moveTo(L,sy(v.y));c.lineTo(R,sy(v.y));c.stroke();c.setLineDash([]);if(v.label){c.fillStyle=v.color||mut;c.textAlign='left';stext(c,v.label,L+4,sy(v.y)-4,'left');}});
+ c.restore();
+ if(s.legend){let tot=0;s.legend.forEach(l=>tot+=c.measureText(l.t).width+46);let lx=Math.max(L+8,R-tot),ly=T+12;c.fillStyle=css('--panel');c.globalAlpha=0.85;c.fillRect(lx-4,ly-10,tot,20);c.globalAlpha=1;c.textAlign='left';s.legend.forEach(l=>{c.strokeStyle=l.color;c.lineWidth=2.5;c.setLineDash(l.dash||[]);c.beginPath();c.moveTo(lx,ly);c.lineTo(lx+22,ly);c.stroke();c.setLineDash([]);c.fillStyle=ink;stext(c,l.t,lx+27,ly+4,'left');lx+=c.measureText(l.t).width+46;});}
+}
+// θέμα (κοινό για όλη τη σειρά)
+function setTheme(d){document.body.classList.toggle('dark',d);$('themeBtn').textContent=d?'☀️ Φωτεινό θέμα':'🌙 Σκούρο θέμα';try{localStorage.setItem('gateSimTheme',d?'dark':'light');}catch(e){}
+ const b=$('back');b.href='theory_index.html'+(d?'#dark':'#light');if(typeof redraw==='function')redraw();}
+(function(){let d=false;try{d=localStorage.getItem('gateSimTheme')==='dark';}catch(e){}if(location.hash==='#dark')d=true;if(location.hash==='#light')d=false;
+ if(window.self!==window.top)$('back').style.display='none';setTheme(d);$('themeBtn').onclick=()=>setTheme(!document.body.classList.contains('dark'));})();
+const C={hot:()=>css('--hot'),acc:()=>css('--accent'),ink:()=>css('--ink'),mut:()=>css('--muted'),good:()=>css('--good'),warn:()=>css('--warn')};
+</script>
+<script>
+const sv=$('sv'),ctl=$('ctl');
+const E12=[1,1.2,1.5,1.8,2.2,2.7,3.3,3.9,4.7,5.6,6.8,8.2];function snap(x){const d=Math.pow(10,Math.floor(Math.log10(x)));const m=x/d;return E12.concat([10]).reduce((a,b)=>Math.abs(b-m)<Math.abs(a-m)?b:a)*d;}
+function R(v,a,b){return snap(logMap(v,a,b));}
+const sUi=slider(ctl,'ui','Πλάτος σήματος εισόδου u<sub>i</sub>',1,100,1,10,v=>fmt(v,0)+' mV');
+const sVCC=slider(ctl,'vcc','V<sub>CC</sub>',5,25,1,20,v=>fmt(v,0)+' V');
+const sR1=slider(ctl,'r1','R1',0,100,1,0,v=>fmtU(R(v,10e3,220e3),'Ω',1));
+const sR2=slider(ctl,'r2','R2',0,100,1,0,v=>fmtU(R(v,2.2e3,68e3),'Ω',1));
+const sRC=slider(ctl,'rc','R<sub>C</sub>',0,100,1,0,v=>fmtU(R(v,470,10e3),'Ω',1));
+const sRE=slider(ctl,'re','R<sub>E</sub>',0,100,1,0,v=>fmtU(R(v,220,4.7e3),'Ω',1));
+const sRL=slider(ctl,'rl','R<sub>L</sub>',0,100,1,0,v=>fmtU(R(v,1e3,100e3),'Ω',1));
+const sB=slider(ctl,'b','β',50,300,10,100,v=>fmt(v,0));
+function setS(s,v){s.value=v;s.dispatchEvent(new Event('input'));}
+function inv(a,b,t){let best=0,bd=1e99;for(let v=0;v<=100;v++){const d=Math.abs(R(v,a,b)-t);if(d<bd){bd=d;best=v;}}return best;}
+function ex(){setS(sUi,10);setS(sVCC,20);setS(sR1,inv(10e3,220e3,82e3));setS(sR2,inv(2.2e3,68e3,18e3));setS(sRC,inv(470,10e3,2.2e3));setS(sRE,inv(220,4.7e3,1e3));setS(sRL,inv(1e3,100e3,4.7e3));setS(sB,100);$('ce').checked=true;update();}
+$('ex').onclick=ex;$('ce').onchange=update;
+const g=el('g',{},sv);
+function npn(p,x,y){const gg=el('g',{},p);el('circle',{cx:x+12,cy:y,r:38,class:'compf'},gg);el('path',{d:`M${x} ${y-24} L${x} ${y+24}`,class:'comp','stroke-width':4},gg);
+ el('path',{d:`M${x-40} ${y} L${x} ${y} M${x} ${y-10} L${x+30} ${y-32} L${x+30} ${y-60} M${x} ${y+10} L${x+30} ${y+32} L${x+30} ${y+60}`,class:'w'},gg);
+ const ax=x+30,ay=y+32;el('path',{d:`M${ax} ${ay} L${ax-14} ${ay-3} L${ax-7} ${ay-12} Z`,class:'wf'},gg);return gg;}
+// ράγα V_CC
+wire(g,[[210,30],[640,30]]);txt(g,660,30,'+V<tspan font-size="12" dy="5">CC</tspan>',17,'t','start');
+wire(g,[[210,30],[210,50]]);resistor(g,210,50,210,150,'R1',178,95,18);wire(g,[[210,150],[210,180]]);dot(g,210,180);resistor(g,210,180,210,290,'R2',178,240,18);wire(g,[[210,290],[210,320]]);
+wire(g,[[210,180],[300,180]]);npn(g,340,180);
+wire(g,[[370,30],[370,50]]);resistor(g,370,50,370,110,'R<tspan font-size="12" dy="5">C</tspan>',345,80,18);wire(g,[[370,110],[370,120]]);dot(g,370,105);
+wire(g,[[370,240],[370,250]]);dot(g,370,250);resistor(g,370,250,370,310,'R<tspan font-size="12" dy="5">E</tspan>',345,282,18);wire(g,[[370,310],[370,320]]);
+const ceG=el('g',{},g);wire(ceG,[[370,250],[440,250],[440,262]]);cap(ceG,440,262,440,302,'C<tspan font-size="12" dy="5">E</tspan>',475,282,true);wire(ceG,[[440,302],[440,320]]);
+wire(g,[[370,105],[470,105]]);cap(g,470,105,530,105,'C2',500,78,true);wire(g,[[530,105],[600,105],[600,170]]);resistor(g,600,170,600,290,'R<tspan font-size="12" dy="5">L</tspan>',630,215,18);wire(g,[[600,290],[600,320]]);
+acsrc(g,70,190,300,'u<tspan font-size="12" dy="5">i</tspan>',42);wire(g,[[70,190],[70,180],[110,180]]);cap(g,110,180,170,180,'C1',140,152,true);wire(g,[[170,180],[210,180]]);
+wire(g,[[70,300],[70,320],[600,320]]);ground(g,300,320);
+const lVB=txt(g,250,205,'',15,'ta','start'),lVC=txt(g,385,130,'',15,'ta','start'),lVE=txt(g,385,232,'',15,'ta','start'),lUL=txt(g,628,260,'',16,'ta','start');
+const fC=flowPath(g,[[370,30],[370,320]]);const fD=flowPath(g,[[210,30],[210,320]]);
+let S={};
+function update(){const ui=+sUi.value/1000,VCC=+sVCC.value,R1=R(+sR1.value,10e3,220e3),R2=R(+sR2.value,2.2e3,68e3),RC=R(+sRC.value,470,10e3),RE=R(+sRE.value,220,4.7e3),RL=R(+sRL.value,1e3,100e3),b=+sB.value,ce=$('ce').checked;
+ ceG.style.opacity=ce?1:0.2;
+ const VB=VCC*R2/(R1+R2),VE=Math.max(0,VB-0.7),IE=VE/RE,IC=IE;let VC=VCC-IC*RC;let VCE=VC-VE;const sat=VCE<0.2;if(sat){VCE=0.2;VC=VE+0.2;}
+ const re=IE>0?0.025/IE:Infinity,rL=RC*RL/(RC+RL),Av=ce?rL/re:rL/(re+RE),rb=ce?b*re:b*(re+RE),IB=IC/b;
+ const up=IC*rL,dn=Math.max(0,VCE-0.2); // όρια ταλάντωσης εξόδου (αποκοπή/κόρος)
+ S={ui,Av,up,dn,VB,VE,IE,IC,VC,VCE,re,rL,rb,IB,ce,sat};
+ lVB.innerHTML='V<tspan font-size="11" dy="4">B</tspan><tspan dy="-4"> = '+fmt(VB,2)+' V</tspan>';lVE.innerHTML='V<tspan font-size="11" dy="4">E</tspan><tspan dy="-4"> = '+fmt(VE,2)+' V</tspan>';lVC.innerHTML='V<tspan font-size="11" dy="4">C</tspan><tspan dy="-4"> = '+fmt(VC,2)+' V</tspan>';
+ const peak=Math.min(Av*ui,Math.max(up,dn));lUL.innerHTML='u<tspan font-size="11" dy="4">L</tspan><tspan dy="-4"> ≈ '+(Av*ui<1?fmt(Av*ui*1000,0)+' mV':fmt(Av*ui,2)+' V')+'</tspan>';
+ setFlow(fC,IC);setFlow(fD,VCC/(R1+R2));
+ const rows=[['V<sub>B</sub> / V<sub>E</sub> / V<sub>C</sub>',fmt(VB,2)+' / '+fmt(VE,2)+' / '+fmt(VC,2)+' V'],['I<sub>E</sub> ≈ I<sub>C</sub> και I<sub>B</sub> = I<sub>C</sub>/β',fmtU(IE,'A',2)+' και '+fmtU(IB,'A',1)],['V<sub>CE</sub>',fmt(VCE,2)+' V'],
+  ['r<sub>e</sub> = 25 mV/I<sub>E</sub> και r<sub>L</sub> = R<sub>C</sub>∥R<sub>L</sub>',fmt(re,1)+' Ω και '+fmtU(rL,'Ω',2)],['AC αντίσταση βάσης r<sub>b</sub>',fmtU(rb,'Ω',2)],['Απολαβή τάσης A<sub>V</sub>',fmt(Av,1)],['Πλάτος εξόδου u<sub>L</sub> = A<sub>V</sub>·u<sub>i</sub>',fmt(Av*ui,3)+' V']];
+ $('ro').innerHTML=rows.map(x=>`<tr><td>${x[0]}</td><td>${x[1]}</td></tr>`).join('');
+ const s=$('st');const clip=Av*ui>Math.min(up,dn);
+ if(sat||VE<=0){s.className='status warn';s.innerHTML='Κακή πόλωση: το τρανζίστορ είναι σε '+(VE<=0?'<b>αποκοπή</b>':'<b>κόρο</b>')+' – δεν μπορεί να ενισχύσει.';}
+ else if(clip){s.className='status warn';s.innerHTML='<b>Ψαλιδισμός!</b> Το σήμα εξόδου ξεπερνά τα όρια ('+fmt(up,2)+' V προς τα πάνω, '+fmt(dn,2)+' V προς τα κάτω) – παραμόρφωση.';}
+ else{s.className='status good';s.innerHTML='Σωστή ενίσχυση: η έξοδος είναι '+fmt(Av,1)+' φορές μεγαλύτερη και <b>αντεστραμμένη (180°)</b>.';}
+ redraw();}
+function redraw(){if(!S.re)return;const {ui,Av,up,dn}=S;const a=[],b=[];for(let k=0;k<=400;k++){const t=2*k/400;const vi=ui*Math.sin(2*Math.PI*t);a.push([t,vi*1000]);let vo=-Av*vi;vo=Math.max(-dn,Math.min(up,vo));b.push([t,vo]);}
+ const ym=Math.max(0.05,Math.min(Math.max(up,dn),Av*ui))*1.3;
+ plot($('cv'),{subs:[{xmin:0,xmax:2,ymin:-ui*1000*1.3,ymax:ui*1000*1.3,xlabel:'',ylabel:'u_i (mV)',title:'Είσοδος',series:[{pts:a,color:C.mut(),w:2.2}]},
+  {xmin:0,xmax:2,ymin:-ym,ymax:ym,xlabel:'t (ms)',ylabel:'u_L (V)',title:'Έξοδος',series:[{pts:b,color:C.acc(),w:2.5}],hlines:[{y:up,color:C.warn()},{y:-dn,color:C.warn()}]}]});}
+new ResizeObserver(redraw).observe($('cv'));
+ex();
+</script>
+</body>
+</html>

@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Θυρίστορ – δίοδος Shockley, SCR και TRIAC</title>
+<style>
+:root{--bg:#f3f5f9;--panel:#ffffff;--ink:#1d2433;--muted:#5b6475;--line:#d5dae3;--wire:#1d2433;--accent:#1f6feb;--hot:#e8411f;--cold:#8a94a6;--flow:#1f6feb;--grid:#e6e9ef;--good:#1a7f37;--warn:#c4410c;--soft:#eef2f8}
+body.dark{--bg:#12161f;--panel:#1b2130;--ink:#e6e9ef;--muted:#9aa3b5;--line:#2f3747;--wire:#d6dbe5;--accent:#58a6ff;--grid:#283042;--flow:#58a6ff;--good:#3fb950;--warn:#ff8a4c;--soft:#232b3b}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font-family:Calibri,"Segoe UI",Carlito,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:15px;display:flex;flex-direction:column;padding:8px 14px 6px}
+header{display:flex;align-items:center;gap:14px;flex:0 0 auto}
+header .ttl{flex:1;min-width:0}
+h1{font-size:22px;margin:0;line-height:1.15}
+.sub{color:var(--muted);font-size:14px;margin-top:1px}
+#back{color:var(--accent);text-decoration:none;font-size:14px;white-space:nowrap}
+button,select{font-family:inherit;font-size:14px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:6px;padding:4px 10px;cursor:pointer}
+button:hover{border-color:var(--accent)}
+button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+#themeBtn{min-width:150px}
+main{flex:1 1 auto;min-height:0;display:grid;grid-template-columns:1.4fr 1fr;gap:10px;margin-top:8px;align-items:stretch}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;min-height:0}
+.panel h2{font-size:15px;margin:0 0 4px;color:var(--muted);font-weight:600}
+.col{display:flex;flex-direction:column;gap:10px;min-height:0}
+.svgbox{flex:1 1 auto;min-height:0;display:flex;align-items:center;justify-content:center}
+.svgbox svg{width:100%;height:100%;max-height:100%}
+.ctrls{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:4px 14px;margin-top:4px}
+.ctrl{display:flex;flex-direction:column;font-size:14px}
+.ctrl .lab{display:flex;justify-content:space-between}
+.ctrl .lab b{color:var(--accent);font-weight:700}
+.ctrl input[type=range]{width:100%;accent-color:var(--accent);margin:2px 0}
+.row{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:4px}
+.plotbox{flex:1 1 auto;min-height:120px;position:relative}
+.plotbox canvas{position:absolute;inset:0;width:100%;height:100%}
+table.ro{border-collapse:collapse;width:100%;font-size:14.5px}
+table.ro td{padding:2px 6px;border-bottom:1px solid var(--line)}
+table.ro td:last-child{text-align:right;font-weight:700;white-space:nowrap}
+.status{margin-top:6px;padding:5px 8px;border-radius:6px;background:var(--soft);font-size:15px}
+.status.good{border-left:4px solid var(--good)}.status.warn{border-left:4px solid var(--warn)}
+details{flex:0 0 auto;margin-top:8px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:4px 12px}
+details summary{cursor:pointer;font-weight:700}
+details p{margin:6px 0;line-height:1.35}
+svg .w{stroke:var(--wire);fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+svg .wf{fill:var(--wire)}
+svg .comp{stroke:var(--wire);fill:none;stroke-width:2.4;stroke-linejoin:round}
+svg .compf{fill:var(--panel);stroke:var(--wire);stroke-width:2.4}
+svg .t{fill:var(--ink);font-family:Calibri,Carlito,Arial,sans-serif}
+svg .tm{fill:var(--muted);font-family:Calibri,Carlito,Arial,sans-serif}
+svg .ta{fill:var(--accent);font-family:Calibri,Carlito,Arial,sans-serif;font-weight:700}
+svg .flow{stroke:var(--flow);stroke-width:4;fill:none;stroke-dasharray:3 15;stroke-linecap:round}
+svg .on{stroke:var(--hot)!important}
+svg .onf{fill:var(--hot)!important}
+@media (max-width:1000px){main{grid-template-columns:1fr}body{height:auto}.svgbox{height:380px}.plotbox{height:300px}}
+
+</style>
+</head>
+<body>
+<header>
+  <a id="back" href="theory_index.html">← Όλες οι προσομοιώσεις</a>
+  <div class="ttl"><h1>Θυρίστορ – δίοδος Shockley, SCR και TRIAC</h1><div class="sub">Δες τη μανδάλωση: η διάταξη "ανάβει" με μια τάση ή έναν παλμό πύλης και "σβήνει" μόνο όταν το ρεύμα πέσει κάτω από το I<sub>H</sub>.</div></div>
+  <label style="font-size:14px"><input type="checkbox" id="flowChk" checked> Εμφάνιση ροής ρεύματος</label>
+  <button id="themeBtn">🌙 Σκούρο θέμα</button>
+</header>
+<main>
+ <div class="panel"><h2>Κύκλωμα</h2>
+  <div class="row"><button id="t0" class="on" style="min-width:200px">Δίοδος P-N-P-N</button><button id="t1" style="min-width:130px">SCR</button><button id="t2" style="min-width:230px">TRIAC – έλεγχος φάσης</button></div>
+  <div class="svgbox"><svg id="sv" viewBox="0 0 680 330"></svg></div>
+  <div class="row" id="btns"></div>
+  <div class="ctrls" id="ctl"></div>
+ </div>
+ <div class="col">
+  <div class="panel" style="flex:1"><h2 id="ptitle">Χαρακτηριστική</h2><div class="plotbox"><canvas id="cv"></canvas></div></div>
+  <div class="panel"><table class="ro" id="ro"></table><div class="status" id="st"></div></div>
+ </div>
+</main>
+<details><summary>Πώς λειτουργεί</summary>
+<p><b>Δίοδος P-N-P-N (παράδειγμα 7.1.1):</b> αύξησε αργά την τάση: μέχρι τα 10 V (V<sub>BO</sub>) δεν περνά ρεύμα. Στα 10 V η δίοδος "ανάβει" και το ρεύμα καθορίζεται από την R = 1 kΩ. Μείωσε τώρα την τάση: η δίοδος μένει ON μέχρι το ρεύμα να πέσει κάτω από I<sub>H</sub> = 4 mA, δηλαδή μέχρι τα 4 V. Η γραμμή στο γράφημα δείχνει τη διαδρομή (μανδάλωση – υστέρηση).</p>
+<p><b>SCR:</b> με τάση ανόδου μικρότερη από τη V<sub>BO</sub>, ένας σύντομος παλμός ρεύματος στην πύλη αρκεί για να ανάψει η λάμπα. Μετά η πύλη δεν έχει πια έλεγχο: για να σβήσει πρέπει να διακοπεί (στιγμιαία) η τάση ανόδου.</p>
+<p><b>TRIAC – έλεγχος φάσης:</b> σε κάθε ημιπερίοδο το TRIAC σκανδαλίζεται με καθυστέρηση (γωνία έναυσης α) και άγει μέχρι τον επόμενο μηδενισμό της τάσης. Όσο μεγαλύτερη η α, τόσο λιγότερη ισχύς φτάνει στη λάμπα. Έτσι λειτουργεί ένας ρυθμιστής φωτισμού (dimmer).</p>
+</details>
+<script>
+// ---------- κοινά εργαλεία της σειράς ----------
+const $=id=>document.getElementById(id);
+const NS='http://www.w3.org/2000/svg';
+function fmt(x,d=2){if(!isFinite(x))return '∞';return x.toFixed(d).replace('.',',').replace('-','−');}
+function fmtU(x,unit,d=2){ // αυτόματα προθέματα
+  const a=Math.abs(x);let p='',k=1;
+  if(a>=1e6){p='M';k=1e-6}else if(a>=1e3&&unit==='Ω'){p='k';k=1e-3}else if(a<1e-3&&a>=1e-6){p='μ';k=1e6}else if(a<1&&a>=1e-3){p='m';k=1e3}else if(a<1e-6&&a>0){p='n';k=1e9}
+  return fmt(x*k,d)+' '+p+unit;}
+function el(tag,attrs,parent){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e;}
+function txt(parent,x,y,s,size=18,cls='t',anchor='middle',extra={}){const t=el('text',Object.assign({x,y,'font-size':size,class:cls,'text-anchor':anchor,'dominant-baseline':'middle'},extra),parent);t.innerHTML=s;return t;}
+// στοιχεία κυκλώματος (οριζόντια/κατακόρυφα), επιστρέφουν <g>
+function wire(p,pts,id){const d='M'+pts.map(q=>q.join(' ')).join(' L');return el('path',{d,class:'w',id:id||''},p);}
+function resistor(p,x1,y1,x2,y2,label,lx,ly,size=18){const g=el('g',{},p);const L=Math.hypot(x2-x1,y2-y1),ux=(x2-x1)/L,uy=(y2-y1)/L,nx=-uy,ny=ux;const a=L/2-26,b=L/2+26;
+ let d=`M${x1} ${y1} L${x1+ux*a} ${y1+uy*a}`;const n=6;for(let i=0;i<=n;i++){const s=a+(b-a)*i/n;const o=(i===0||i===n)?0:(i%2?9:-9);d+=` L${x1+ux*s+nx*o} ${y1+uy*s+ny*o}`;}d+=` L${x2} ${y2}`;
+ el('path',{d,class:'comp'},g);if(label)txt(g,lx,ly,label,size);return g;}
+function diode(p,x1,y1,x2,y2,opts={}){ // άνοδος (x1,y1) → κάθοδος (x2,y2)
+ const g=el('g',{},p);const L=Math.hypot(x2-x1,y2-y1),ux=(x2-x1)/L,uy=(y2-y1)/L,nx=-uy,ny=ux,c=[(x1+x2)/2,(y1+y2)/2],h=14;
+ const A=[c[0]-ux*h,c[1]-uy*h],K=[c[0]+ux*h,c[1]+uy*h];
+ el('path',{d:`M${x1} ${y1} L${A[0]} ${A[1]} M${K[0]} ${K[1]} L${x2} ${y2}`,class:'w'},g);
+ const tri=el('path',{d:`M${A[0]+nx*h} ${A[1]+ny*h} L${A[0]-nx*h} ${A[1]-ny*h} L${K[0]} ${K[1]} Z`,class:'compf'},g);
+ let bar=`M${K[0]+nx*h} ${K[1]+ny*h} L${K[0]-nx*h} ${K[1]-ny*h}`;
+ if(opts.zener)bar=`M${K[0]+nx*h-ux*6} ${K[1]+ny*h-uy*6} L${K[0]+nx*h} ${K[1]+ny*h} L${K[0]-nx*h} ${K[1]-ny*h} L${K[0]-nx*h+ux*6} ${K[1]-ny*h+uy*6}`;
+ const b=el('path',{d:bar,class:'comp'},g);
+ if(opts.gate){el('path',{d:`M${K[0]} ${K[1]} L${K[0]+nx*opts.gate} ${K[1]+ny*opts.gate+(opts.gdy||0)}`,class:'w'},g);}
+ if(opts.label)txt(g,opts.lx,opts.ly,opts.label,opts.size||18);
+ g.tri=tri;g.bar=b;return g;}
+function cap(p,x1,y1,x2,y2,label,lx,ly,pol){const g=el('g',{},p);const L=Math.hypot(x2-x1,y2-y1),ux=(x2-x1)/L,uy=(y2-y1)/L,nx=-uy,ny=ux,c=[(x1+x2)/2,(y1+y2)/2],gap=5,h=16;
+ el('path',{d:`M${x1} ${y1} L${c[0]-ux*gap} ${c[1]-uy*gap} M${c[0]+ux*gap} ${c[1]+uy*gap} L${x2} ${y2}`,class:'w'},g);
+ el('path',{d:`M${c[0]-ux*gap+nx*h} ${c[1]-uy*gap+ny*h} L${c[0]-ux*gap-nx*h} ${c[1]-uy*gap-ny*h} M${c[0]+ux*gap+nx*h} ${c[1]+uy*gap+ny*h} L${c[0]+ux*gap-nx*h} ${c[1]+uy*gap-ny*h}`,class:'comp','stroke-width':3.2},g);
+ if(pol)txt(g,c[0]-ux*14+nx*20,c[1]-uy*14+ny*20,'+',16);
+ if(label)txt(g,lx,ly,label,18);return g;}
+function ground(p,x,y){const g=el('g',{},p);el('path',{d:`M${x} ${y} L${x} ${y+10} M${x-14} ${y+10} L${x+14} ${y+10} M${x-9} ${y+16} L${x+9} ${y+16} M${x-4} ${y+22} L${x+4} ${y+22}`,class:'comp'},g);return g;}
+function battery(p,x,y1,y2,label,lx){ // κατακόρυφη, + πάνω
+ const g=el('g',{},p);const c=(y1+y2)/2;el('path',{d:`M${x} ${y1} L${x} ${c-5} M${x} ${c+5} L${x} ${y2}`,class:'w'},g);
+ el('path',{d:`M${x-18} ${c-5} L${x+18} ${c-5}`,class:'comp','stroke-width':3},g);el('path',{d:`M${x-9} ${c+5} L${x+9} ${c+5}`,class:'comp','stroke-width':5},g);
+ txt(g,x+24,c-14,'+',18);if(label)txt(g,lx===undefined?x-30:lx,c,label,18,'t','end');return g;}
+function acsrc(p,x,y1,y2,label,lx){const g=el('g',{},p);const c=(y1+y2)/2;el('path',{d:`M${x} ${y1} L${x} ${c-22} M${x} ${c+22} L${x} ${y2}`,class:'w'},g);el('circle',{cx:x,cy:c,r:22,class:'compf'},g);
+ el('path',{d:`M${x-13} ${c} q6.5 -14 13 0 t13 0`,class:'comp','stroke-width':2.2},g);if(label)txt(g,lx===undefined?x-30:lx,c,label,18,'t','end');return g;}
+function dot(p,x,y){return el('circle',{cx:x,cy:y,r:4.5,class:'wf'},p);}
+function lamp(p,x,y,r=18){const g=el('g',{},p);const glow=el('circle',{cx:x,cy:y,r:r+10,fill:'#ffd54a',opacity:0},g);const c=el('circle',{cx:x,cy:y,r,class:'compf'},g);
+ el('path',{d:`M${x-r*0.7} ${y-r*0.7} L${x+r*0.7} ${y+r*0.7} M${x+r*0.7} ${y-r*0.7} L${x-r*0.7} ${y+r*0.7}`,class:'comp'},g);g.set=b=>{glow.setAttribute('opacity',(0.85*b).toFixed(2));c.style.fill=b>0.02?`rgba(255,213,74,${0.3+0.7*b})`:'';};return g;}
+// ροή ρεύματος: κινούμενες κουκκίδες πάνω σε διαδρομές
+const flows=[];
+function flowPath(p,pts){const d='M'+pts.map(q=>q.join(' ')).join(' L');const e=el('path',{d,class:'flow'},p);const f={e,i:0,off:0};flows.push(f);return f;}
+function setFlow(f,i){f.i=i;}
+let lastT=performance.now();
+function flowLoop(t){const dt=Math.min(0.05,(t-lastT)/1000);lastT=t;const show=$('flowChk').checked;
+ for(const f of flows){const s=Math.sign(f.i)*Math.min(160,30+70*Math.log10(1+Math.abs(f.i)*1000));
+  if(!show||Math.abs(f.i)<1e-6){f.e.style.display='none';continue;}f.e.style.display='';f.off-=s*dt;f.e.style.strokeDashoffset=f.off;}
+ requestAnimationFrame(flowLoop);} requestAnimationFrame(flowLoop);
+// ρυθμιστές
+function slider(parent,id,label,min,max,step,val,show){const d=document.createElement('div');d.className='ctrl';
+ d.innerHTML=`<div class="lab"><span>${label}</span><b id="${id}V"></b></div><input type="range" id="${id}" min="${min}" max="${max}" step="${step}" value="${val}">`;
+ parent.appendChild(d);const inp=d.querySelector('input');const upd=()=>{$(id+'V').innerHTML=show(+inp.value);};inp.addEventListener('input',()=>{upd();update();});upd();return inp;}
+function logMap(v,a,b){return a*Math.pow(b/a,v/100);} // v 0..100
+// γραφήματα (canvas)
+function css(v){return getComputedStyle(document.body).getPropertyValue(v).trim();}
+function plot(cv,cfg){const r=cv.getBoundingClientRect();const dpr=window.devicePixelRatio||1;cv.width=r.width*dpr;cv.height=r.height*dpr;const c=cv.getContext('2d');c.setTransform(dpr,0,0,dpr,0,0);
+ c.clearRect(0,0,r.width,r.height);const subs=cfg.subs||[cfg];const H=r.height/subs.length;
+ subs.forEach((s,k)=>drawSub(c,s,8,k*H+6,r.width-14,H-8));}
+function niceTicks(a,b,n=6){const span=b-a,step0=span/n,m=Math.pow(10,Math.floor(Math.log10(step0)));const st=[1,2,2.5,5,10].map(v=>v*m).find(v=>span/v<=n)||m*10;const out=[];for(let v=Math.ceil(a/st)*st;v<=b+1e-9;v+=st)out.push(+v.toFixed(10));return {t:out,st};}
+function stext(c,str,x,y,align){str=String(str);const parts=[];const re=/_([A-Za-zΑ-Ωα-ω0-9]+)|_\{([^}]*)\}/g;let i=0,m;while((m=re.exec(str))){if(m.index>i)parts.push([str.slice(i,m.index),0]);parts.push([m[1]||m[2],1]);i=re.lastIndex;}if(i<str.length)parts.push([str.slice(i),0]);
+ const f=c.font,sz=parseFloat(f.match(/(\d+(\.\d+)?)px/)[1]),fs=f.replace(/\d+(\.\d+)?px/,(sz*0.75).toFixed(1)+'px');let w=0;parts.forEach(p=>{c.font=p[1]?fs:f;w+=c.measureText(p[0]).width;});
+ let x0=align==='center'?x-w/2:align==='right'?x-w:x;const ta=c.textAlign;c.textAlign='left';parts.forEach(p=>{c.font=p[1]?fs:f;c.fillText(p[0],x0,y+(p[1]?sz*0.3:0));x0+=c.measureText(p[0]).width;});c.font=f;c.textAlign=ta;return w;}
+function drawSub(c,s,X,Y,W,H){const L=X+52,T=Y+(s.title?20:6),R=X+W-(s.y2?52:10),B=Y+H-34;const ink=css('--ink'),mut=css('--muted'),grid=css('--grid');
+ const sx=x=>L+(x-s.xmin)/(s.xmax-s.xmin)*(R-L),sy=y=>B-(y-s.ymin)/(s.ymax-s.ymin)*(B-T);
+ c.font='13px Calibri,Carlito,Arial';c.lineWidth=1;
+ if(s.title){c.fillStyle=ink;c.textAlign='left';c.font='bold 14px Calibri,Carlito,Arial';stext(c,s.title,L,Y+12,'left');c.font='13px Calibri,Carlito,Arial';}
+ const xt=s.xticks||niceTicks(s.xmin,s.xmax,7).t, yt=s.yticks||niceTicks(s.ymin,s.ymax,5).t;
+ c.strokeStyle=grid;c.fillStyle=mut;
+ xt.forEach(v=>{const vv=typeof v==='object'?v.v:v,lab=typeof v==='object'?v.l:fmt(vv,Math.abs(vv)<10&&vv%1?1:0);c.beginPath();c.moveTo(sx(vv),T);c.lineTo(sx(vv),B);c.stroke();c.textAlign='center';c.fillText(lab,sx(vv),B+14);});
+ yt.forEach(v=>{const vv=typeof v==='object'?v.v:v,lab=typeof v==='object'?v.l:fmt(vv,Math.abs(vv)<10&&vv%1?1:0);c.beginPath();c.moveTo(L,sy(vv));c.lineTo(R,sy(vv));c.stroke();c.textAlign='right';c.fillText(lab,L-5,sy(vv)+4);});
+ c.strokeStyle=mut;c.lineWidth=1.3;c.beginPath();c.moveTo(L,T);c.lineTo(L,B);c.lineTo(R,B);c.stroke();
+ if(s.xmin<0&&s.xmax>0){c.beginPath();c.moveTo(sx(0),T);c.lineTo(sx(0),B);c.stroke();}
+ if(s.ymin<0&&s.ymax>0){c.beginPath();c.moveTo(L,sy(0));c.lineTo(R,sy(0));c.stroke();}
+ c.fillStyle=ink;stext(c,s.xlabel||'',R,B+28,'right');c.save();c.translate(X+12,(T+B)/2);c.rotate(-Math.PI/2);stext(c,s.ylabel||'',0,0,'center');c.restore();
+ c.save();c.beginPath();c.rect(L,T-2,R-L,B-T+4);c.clip();
+ (s.series||[]).forEach(se=>{c.strokeStyle=se.color||ink;c.lineWidth=se.w||2;c.setLineDash(se.dash||[]);c.beginPath();let first=true;
+  se.pts.forEach(([x,y])=>{if(!isFinite(y)){first=true;return;}const px=sx(x),py=sy(Math.max(s.ymin-(s.ymax-s.ymin),Math.min(s.ymax+(s.ymax-s.ymin),y)));if(first){c.moveTo(px,py);first=false;}else c.lineTo(px,py);});c.stroke();c.setLineDash([]);
+  if(se.label){c.fillStyle=se.color||ink;c.textAlign=se.la||'left';const p=se.lp||se.pts[se.pts.length-1];stext(c,se.label,sx(p[0])+(se.dx||4),sy(p[1])+(se.dy||-6),se.la||'left');}});
+ (s.bars||[]).forEach(b=>{c.fillStyle=b.color;c.fillRect(sx(b.x0),sy(b.y),sx(b.x1)-sx(b.x0),sy(s.ymin)-sy(b.y));});
+ (s.points||[]).forEach(p=>{c.fillStyle=p.color||css('--hot');c.beginPath();c.arc(sx(p.x),sy(p.y),p.r||6,0,7);c.fill();if(p.label){c.fillStyle=ink;c.font='bold 14px Calibri,Carlito,Arial';c.textAlign='left';stext(c,p.label,sx(p.x)+9,sy(p.y)-8,'left');c.font='13px Calibri,Carlito,Arial';}});
+ (s.vlines||[]).forEach(v=>{c.strokeStyle=v.color||mut;c.setLineDash(v.dash||[4,4]);c.beginPath();c.moveTo(sx(v.x),T);c.lineTo(sx(v.x),B);c.stroke();c.setLineDash([]);});
+ (s.hlines||[]).forEach(v=>{c.strokeStyle=v.color||mut;c.setLineDash(v.dash||[4,4]);c.beginPath();c.moveTo(L,sy(v.y));c.lineTo(R,sy(v.y));c.stroke();c.setLineDash([]);if(v.label){c.fillStyle=v.color||mut;c.textAlign='left';stext(c,v.label,L+4,sy(v.y)-4,'left');}});
+ c.restore();
+ if(s.legend){let tot=0;s.legend.forEach(l=>tot+=c.measureText(l.t).width+46);let lx=Math.max(L+8,R-tot),ly=T+12;c.fillStyle=css('--panel');c.globalAlpha=0.85;c.fillRect(lx-4,ly-10,tot,20);c.globalAlpha=1;c.textAlign='left';s.legend.forEach(l=>{c.strokeStyle=l.color;c.lineWidth=2.5;c.setLineDash(l.dash||[]);c.beginPath();c.moveTo(lx,ly);c.lineTo(lx+22,ly);c.stroke();c.setLineDash([]);c.fillStyle=ink;stext(c,l.t,lx+27,ly+4,'left');lx+=c.measureText(l.t).width+46;});}
+}
+// θέμα (κοινό για όλη τη σειρά)
+function setTheme(d){document.body.classList.toggle('dark',d);$('themeBtn').textContent=d?'☀️ Φωτεινό θέμα':'🌙 Σκούρο θέμα';try{localStorage.setItem('gateSimTheme',d?'dark':'light');}catch(e){}
+ const b=$('back');b.href='theory_index.html'+(d?'#dark':'#light');if(typeof redraw==='function')redraw();}
+(function(){let d=false;try{d=localStorage.getItem('gateSimTheme')==='dark';}catch(e){}if(location.hash==='#dark')d=true;if(location.hash==='#light')d=false;
+ if(window.self!==window.top)$('back').style.display='none';setTheme(d);$('themeBtn').onclick=()=>setTheme(!document.body.classList.contains('dark'));})();
+const C={hot:()=>css('--hot'),acc:()=>css('--accent'),ink:()=>css('--ink'),mut:()=>css('--muted'),good:()=>css('--good'),warn:()=>css('--warn')};
+</script>
+<script>
+const sv=$('sv');let tab=0;const g=el('g',{},sv);let ctlEls=[];
+function tabs(i){tab=i;for(let j=0;j<3;j++)$('t'+j).classList.toggle('on',j===i);build();}
+for(let j=0;j<3;j++)$('t'+j).onclick=()=>tabs(j);
+function pnpn(p,x,y1,y2,lbl,gate){const d=diode(p,x,y1,x,y2,{});const c=(y1+y2)/2;el('path',{d:`M${x-14} ${c-8} L${x+14} ${c-8}`,class:'comp'},p);
+ if(gate)el('path',{d:`M${x+8} ${c+14} L${x+40} ${c+34}`,class:'w'},p);txt(p,x+24,c-18,lbl,16,'t','start');return d;}
+function triac(p,x,y1,y2){const gg=el('g',{},p);const c=(y1+y2)/2,h=16;el('path',{d:`M${x} ${y1} L${x} ${c-h} M${x} ${c+h} L${x} ${y2}`,class:'w'},gg);
+ el('path',{d:`M${x-22} ${c-h} L${x+22} ${c-h} M${x-22} ${c+h} L${x+22} ${c+h}`,class:'comp'},gg);
+ const t1=el('path',{d:`M${x-20} ${c-h} L${x-2} ${c-h} L${x-11} ${c+h} Z`,class:'compf'},gg);const t2=el('path',{d:`M${x+2} ${c+h} L${x+20} ${c+h} L${x+11} ${c-h} Z`,class:'compf'},gg);
+ el('path',{d:`M${x+14} ${c+h} L${x+40} ${c+h+22}`,class:'w'},gg);gg.t=[t1,t2];return gg;}
+let S={},state=false,hist=[],gateT=0,breakT=0,phase=0;
+function clearCtl(){$('ctl').innerHTML='';$('btns').innerHTML='';}
+function build(){g.innerHTML='';flows.length=0;clearCtl();hist=[];state=false;S={};
+ if(tab===0){$('ptitle').textContent='Χαρακτηριστική I–V διόδου P-N-P-N και ευθεία φόρτου';
+  S.sV=slider($('ctl'),'v','Τάση πηγής V',0,20,0.1,0,v=>fmt(v,1)+' V');
+  battery(g,150,100,260,'');S.lV=txt(g,120,180,'',19,'t','end');wire(g,[[150,100],[150,60],[260,60]]);resistor(g,260,60,400,60,'R = 1 kΩ',330,28,18);wire(g,[[400,60],[480,60],[480,110]]);
+  S.d=pnpn(g,480,110,230,'D (P-N-P-N)');wire(g,[[480,230],[480,290],[150,290],[150,260]]);ground(g,320,290);
+  S.lI=txt(g,330,100,'',18,'ta');S.lVD=txt(g,520,250,'',17,'ta','start');S.f=flowPath(g,[[150,90],[150,60],[480,60],[480,290],[150,290],[150,262]]);
+  const b=document.createElement('button');b.textContent='↺ Μηδενισμός';b.onclick=()=>{S.sV.value=0;hist=[];state=false;update();};$('btns').appendChild(b);}
+ if(tab===1){$('ptitle').textContent='Χαρακτηριστικές SCR για διάφορα ρεύματα πύλης';
+  S.sV=slider($('ctl'),'v','Τάση ανόδου V<sub>AA</sub>',0,30,0.5,12,v=>fmt(v,1)+' V');S.sG=slider($('ctl'),'ig','Ρεύμα παλμού πύλης I<sub>G</sub>',0,10,0.5,5,v=>fmt(v,1)+' mA');
+  battery(g,560,110,250,'');S.lV=txt(g,592,180,'',18,'t','start');wire(g,[[560,110],[560,50],[430,50]]);S.lamp=lamp(g,400,50,20);wire(g,[[380,50],[330,50],[330,110]]);
+  S.d=pnpn(g,330,110,230,'SCR',true);wire(g,[[330,230],[330,290],[560,290],[560,250]]);ground(g,450,290);
+  resistor(g,370,204,250,204,'R<tspan font-size="12" dy="5">G</tspan>',306,176,17);wire(g,[[250,204],[150,204],[150,230]]);battery(g,150,230,280,'');wire(g,[[150,280],[150,290],[330,290]]);
+  S.sw=txt(g,150,190,'',15,'ta');txt(g,118,256,'πύλη',15,'tm','end');
+  S.fA=flowPath(g,[[560,100],[560,50],[330,50],[330,290],[560,290],[560,252]]);S.fG=flowPath(g,[[150,228],[150,204],[370,204]]);S.lI=txt(g,450,20,'',17,'ta');
+  const b1=document.createElement('button');b1.textContent='⚡ Παλμός πύλης';b1.style.minWidth='150px';b1.onclick=()=>{gateT=0.5;};
+  const b2=document.createElement('button');b2.textContent='⏻ Διακοπή ανόδου';b2.style.minWidth='160px';b2.onclick=()=>{breakT=0.4;};$('btns').append(b1,b2);}
+ if(tab===2){$('ptitle').textContent='Τάση δικτύου (διακεκομμένη) και τάση στη λάμπα (συνεχής)';
+  S.sA=slider($('ctl'),'a','Γωνία έναυσης α',0,180,1,90,v=>fmt(v,0)+'°');
+  acsrc(g,140,90,250,'230 V ~',112);wire(g,[[140,90],[140,50],[330,50]]);S.lamp=lamp(g,360,50,22);wire(g,[[382,50],[520,50],[520,110]]);
+  S.d=triac(g,520,110,230);wire(g,[[520,230],[520,290],[140,290],[140,250]]);txt(g,560,150,'TRIAC',16,'t','start');
+  txt(g,575,272,'G',15,'tm','start');txt(g,400,315,'(η πύλη συνδέεται σε κύκλωμα σκανδαλισμού με DIAC)',14,'tm','middle');
+  S.f=flowPath(g,[[140,80],[140,50],[520,50],[520,290],[140,290],[140,252]]);S.lI=txt(g,330,100,'',17,'ta');}
+ update();}
+function vbo(ig){return Math.max(1.2,20*(1-ig/6));}
+function update(){if(tab===0){const V=+S.sV.value;if(!state&&V>=10){state=true;hist.push([10,0],[10,0.01]);}let I=state?V/1000:0;if(state&&I<4e-3){state=false;I=0;hist.push([4,0.004],[4,0]);}
+  const VD=state?0:V;hist.push([V,I]);if(hist.length>400)hist.shift();S.V=V;S.I=I;S.VD=VD;
+  S.lV.innerHTML='V = '+fmt(V,1)+' V';S.lI.innerHTML='I = '+fmt(I*1000,1)+' mA';S.lVD.innerHTML='V<tspan font-size="12" dy="5">D</tspan><tspan dy="-5"> ≈ '+fmt(VD,1)+' V</tspan>';
+  S.d.tri.classList.toggle('onf',state);setFlow(S.f,I);
+  $('ro').innerHTML=[['Τάση σκανδαλισμού V<sub>BO</sub>','10 V'],['Ρεύμα συγκράτησης I<sub>H</sub>','4 mA'],['Κατάσταση διόδου',state?'ON (μανδαλωμένη)':'OFF'],['Ρεύμα I = V/R (σε ON)',fmt(I*1000,1)+' mA'],['Τάση σβησίματος V = I<sub>H</sub>·R','4 V']].map(x=>`<tr><td>${x[0]}</td><td>${x[1]}</td></tr>`).join('');
+  const s=$('st');s.className='status '+(state?'good':'warn');s.innerHTML=state?(V<10?'Η δίοδος παραμένει <b>ON</b> παρόλο που V < 10 V – <b>μανδάλωση</b>! Θα σβήσει όταν I < 4 mA (V < 4 V).':'Η δίοδος είναι <b>ON</b>: το ρεύμα καθορίζεται μόνο από την R.'):'Η δίοδος είναι <b>OFF</b>: δεν περνά ρεύμα, όλη η τάση είναι στη δίοδο.';}
+ if(tab===1){const V=+S.sV.value,ig=gateT>0?+S.sG.value:0;const vb=vbo(ig);if(breakT>0){state=false;}else if(!state&&V>=vb&&V>1)state=true;
+  let I=state?(V-1)/300:0;if(state&&I<0.005){state=false;I=0;}S.I=I;S.V=V;S.ig=ig;
+  S.lV.innerHTML='V<tspan font-size="12" dy="5">AA</tspan><tspan dy="-5"> = '+fmt(breakT>0?0:V,1)+' V</tspan>';S.lI.innerHTML='I<tspan font-size="12" dy="5">A</tspan><tspan dy="-5"> = '+fmt(I*1000,0)+' mA</tspan>';
+  S.sw.innerHTML=ig>0?'παλμός I<tspan font-size="11" dy="4">G</tspan><tspan dy="-4"> = '+fmt(ig,1)+' mA</tspan>':'';
+  S.d.tri.classList.toggle('onf',state);S.lamp.set(state?Math.min(1,I/0.08):0);setFlow(S.fA,I);setFlow(S.fG,ig/1000);
+  $('ro').innerHTML=[['V<sub>BO</sub> χωρίς ρεύμα πύλης','20 V'],['V<sub>BO</sub> με το τρέχον ρεύμα πύλης',fmt(vb,1)+' V'],['Ρεύμα συγκράτησης I<sub>H</sub>','5 mA'],['Κατάσταση SCR',state?'ON':'OFF'],['Ρεύμα ανόδου (λάμπα 300 Ω)',fmt(I*1000,0)+' mA']].map(x=>`<tr><td>${x[0]}</td><td>${x[1]}</td></tr>`).join('');
+  const s=$('st');s.className='status '+(state?'good':'warn');s.innerHTML=state?'Ο SCR <b>άγει</b> και παραμένει ON ακόμη και χωρίς ρεύμα πύλης. Για να σβήσει: «Διακοπή ανόδου».':(V>=20?'':'Ο SCR είναι <b>OFF</b>. Πάτησε «Παλμός πύλης» – με αρκετό I<sub>G</sub> ανάβει σε πολύ μικρότερη τάση από τα 20 V.');}
+ if(tab===2){const a=+S.sA.value*Math.PI/180;const P=1-a/Math.PI+Math.sin(2*a)/(2*Math.PI);S.a=a;S.P=P;S.lamp.set(Math.pow(P,0.7));
+  $('ro').innerHTML=[['Γωνία έναυσης α',fmt(a*180/Math.PI,0)+'°'],['Καθυστέρηση έναυσης (50 Hz)',fmt(a/Math.PI*10,2)+' ms'],['Ισχύς στη λάμπα (% της μέγιστης)',fmt(P*100,1)+' %'],['Ενεργός τάση στη λάμπα',fmt(230*Math.sqrt(P),0)+' V']].map(x=>`<tr><td>${x[0]}</td><td>${x[1]}</td></tr>`).join('');
+  const s=$('st');s.className='status';s.innerHTML='Το TRIAC σκανδαλίζεται '+fmt(a*180/Math.PI,0)+'° μετά από κάθε μηδενισμό και σβήνει στον επόμενο μηδενισμό του ρεύματος.';}
+ redraw();}
+function redraw(){if(tab===0&&S.sV){const ch=[[0,0],[10,0.4],[10.05,0.5]],on=[[0.8,4],[0.9,30]];
+  plot($('cv'),{xmin:0,xmax:21,ymin:0,ymax:22,xlabel:'τάση V (V)',ylabel:'ρεύμα I (mA)',series:[{pts:hist.map(q=>[q[0],q[1]*1000]),color:C.warn(),w:4},{pts:[[0,0],[20,20]],color:C.acc(),dash:[6,5],w:1.5,label:'I = V/R (ON)',lp:[14,14],dx:6,dy:12}],
+   points:[{x:S.V,y:S.I*1000,label:state?'ON':'OFF'}],vlines:[{x:10},{x:4}],hlines:[{y:4,label:'I_H = 4 mA'}],legend:[{t:'διαδρομή',color:C.warn()}]});}
+ if(tab===1&&S.sV){const ser=[];[0,2,4,5.5].forEach((ig,k)=>{const vb=vbo(ig);ser.push({pts:[[0,0],[vb,1.5]],color:k===0?C.ink():C.mut(),w:1.8});ser.push({pts:[[vb,1.5],[vb,14+k*14]],color:C.mut(),w:1,dash:[3,3],label:'I_G='+fmt(ig,1)+' mA',lp:[vb,14+k*14],dx:0,dy:-4,la:'center'});});ser.push({pts:[[1.2,5],[1.6,95]],color:C.ink(),w:2,label:'ON',lp:[1.6,95],dx:6,dy:10});
+  ser.push({pts:[[1,0],[31,100]],color:C.acc(),dash:[6,5],w:1.5});
+  plot($('cv'),{xmin:0,xmax:32,ymin:0,ymax:100,xlabel:'V_AK (V)',ylabel:'I_A (mA)',series:ser,points:[{x:state?1.2:S.V,y:S.I*1000,label:state?'ON':'OFF'}],hlines:[{y:5,label:'I_H'}]});}
+ if(tab===2&&S.sA){const a=S.a,m=[],l=[];for(let k=0;k<=400;k++){const th=4*Math.PI*k/400;const v=325*Math.sin(th);m.push([th*10/Math.PI,v]);const ph=th%Math.PI;l.push([th*10/Math.PI,ph>=a?v:0]);}
+  plot($('cv'),{xmin:0,xmax:40,ymin:-360,ymax:360,xlabel:'t (ms)',ylabel:'τάση (V)',xticks:[0,10,20,30,40],series:[{pts:m,color:C.mut(),dash:[5,4],w:1.5},{pts:l,color:C.acc(),w:2.6}],vlines:[{x:a*10/Math.PI},{x:10+a*10/Math.PI}]});}}
+new ResizeObserver(redraw).observe($('cv'));
+let lt=performance.now();function loop(t){const dt=(t-lt)/1000;lt=t;
+ if(tab===1){const before=gateT>0||breakT>0;gateT=Math.max(0,gateT-dt);breakT=Math.max(0,breakT-dt);if(before)update();}
+ if(tab===2&&S.sA){phase=(phase+dt*0.5)%1;const th=phase*2*Math.PI,ph=th%Math.PI;const on=ph>=S.a;S.d.t[0].classList.toggle('onf',on&&th<Math.PI);S.d.t[1].classList.toggle('onf',on&&th>=Math.PI);setFlow(S.f,on?(th<Math.PI?0.05:-0.05):0);}
+ requestAnimationFrame(loop);}requestAnimationFrame(loop);
+tabs(0);
+</script>
+</body>
+</html>
