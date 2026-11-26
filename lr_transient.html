@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Προσομοίωση: Μεταβατικά φαινόμενα σε κύκλωμα LR</title>
+<style>
+  :root{
+    --bg:#f4f6f9; --card:#ffffff; --ink:#1d2433; --muted:#5b6475;
+    --line:#d5dbe5; --hi:#e8411f; --accent:#0f7b6c; --th:#eef2f7; --act:#fff3c4;
+    --lcd:#14261a; --lcdt:#7dff9e; --flowc:#1e7bff;
+    --sl:#0f7b6c; --trk:#d5dbe5; --trkb:#b3bdcc; --thumb:#ffffff;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{font-family:Calibri,Carlito,"Segoe UI",Arial,sans-serif;background:var(--bg);color:var(--ink)}
+  .wrap{max-width:960px;margin:0 auto;padding:20px 16px 32px}
+  h1{font-size:1.6rem;margin:0 0 4px}
+  .sub{color:var(--muted);margin:0 0 18px;font-size:1rem;line-height:1.4}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:16px}
+  h2{font-size:1.15rem;margin:0 0 10px}
+  .svgbox{position:relative;width:100%}
+  #sv{width:100%;height:auto;display:block;user-select:none;-webkit-user-select:none}
+  .head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+  #btnTheme{white-space:nowrap}
+  .back{display:inline-block;margin:0 0 10px;color:var(--muted);text-decoration:none;font-size:1rem}
+  .back:hover{color:var(--ink);text-decoration:underline}
+  body.embedded .back{display:none}
+  button{font:inherit;font-size:1rem;padding:7px 14px;border-radius:8px;border:1px solid var(--line);background:#fff;color:var(--ink);cursor:pointer}
+  button:hover{background:#f0f3f8}
+  button.on{background:#e7f4f1;border-color:var(--accent)}
+  .controls{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;align-items:center;margin-top:8px}
+  .chk{display:inline-flex;align-items:center;gap:6px;font-size:1rem;color:var(--muted);cursor:pointer;user-select:none}
+  .ctrls{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:6px 22px;margin-top:8px}
+  .ctl{display:flex;align-items:center;gap:8px;font-size:1rem}
+  .ctl label{min-width:6.6em;font-weight:700;white-space:nowrap}
+  .ctl input[type=range]{flex:1;min-width:80px;cursor:pointer;-webkit-appearance:none;appearance:none;height:24px;margin:0;background:transparent;--p:50%}
+  .ctl input[type=range]:focus{outline:none}
+  .ctl input[type=range]::-webkit-slider-runnable-track{height:8px;border-radius:5px;border:1px solid var(--trkb);
+     background:linear-gradient(to right,var(--sl) 0,var(--sl) var(--p),var(--trk) var(--p),var(--trk) 100%)}
+  .ctl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:20px;height:20px;margin-top:-7px;border-radius:50%;
+     background:var(--thumb);border:3px solid var(--sl);box-shadow:0 1px 3px rgba(0,0,0,.35)}
+  .ctl input[type=range]::-moz-range-track{height:8px;border-radius:5px;border:1px solid var(--trkb);background:var(--trk)}
+  .ctl input[type=range]::-moz-range-progress{height:8px;border-radius:5px;background:var(--sl)}
+  .ctl input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--thumb);border:3px solid var(--sl);box-shadow:0 1px 3px rgba(0,0,0,.35)}
+  .ctl input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 4px rgba(15,123,108,.3)}
+  .ctl input[type=range]:focus-visible::-moz-range-thumb{box-shadow:0 0 0 4px rgba(15,123,108,.3)}
+  .ctl output{min-width:4.6em;text-align:right;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .seg{display:inline-flex}
+  .seg button{border-radius:0;padding:5px 12px}
+  .seg button:first-child{border-radius:8px 0 0 8px}
+  .seg button:last-child{border-radius:0 8px 8px 0}
+  .seg button+button{border-left:none}
+  .seg button.sel{background:#1d2433;color:#fff;border-color:#1d2433}
+  .seglbl{font-weight:700;margin-right:6px}
+  .status{text-align:center;font-size:1.12rem;margin:8px 0 0;line-height:1.35}
+  .status b{color:var(--hi)}
+  table{border-collapse:collapse;width:100%;font-size:1.02rem}
+  th,td{border:1px solid var(--line);padding:5px 8px}
+  th{background:var(--th);text-align:left}
+  td.f{color:var(--muted)}
+  td.v{text-align:right;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+  tr.key td{background:var(--act)}
+  .eq{font-size:1.25rem;text-align:center;margin:0 0 10px}
+  .eq b{color:var(--hi)}
+  .note{color:var(--muted);font-size:.97rem;line-height:1.45;margin:0 0 8px}
+  .note b{color:var(--ink)}
+  canvas{width:100%;height:230px;display:block;border:1px solid var(--line);border-radius:8px;background:#fcfdfe}
+  .legend{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:8px}
+  .legend h2{margin:0}
+  .legend .controls{margin:0}
+  .legend button{padding:5px 10px;font-size:.92rem}
+  details.how summary{cursor:pointer;font-weight:700;font-size:1.1rem}
+  details.how[open] summary{margin-bottom:8px}
+  .pbar{display:flex;height:16px;border-radius:5px;overflow:hidden;border:1px solid var(--line);min-width:120px}
+  .pbar span{display:block;height:100%}
+  kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 5px;background:#fff;font-size:.9em}
+
+  /* ---------- SVG ---------- */
+  .wire{fill:none;stroke-width:5;stroke-linejoin:round;stroke-linecap:round;transition:stroke .15s}
+  .flow{fill:none;stroke:var(--flowc);stroke-width:7;stroke-linecap:round;stroke-linejoin:round;
+        stroke-dasharray:0.1 18;animation:flow linear infinite;pointer-events:none}
+  .flow.off{display:none}
+  .noflow .flow{display:none}
+  @keyframes flow{to{stroke-dashoffset:-18.1}}
+  .comp{fill:none;stroke:var(--ink);stroke-width:3;stroke-linejoin:round;stroke-linecap:round}
+  .mask{fill:var(--card)}
+  .plate{stroke:var(--ink);stroke-width:3;stroke-linecap:butt}
+  .plate.thick{stroke-width:7}
+  .lbl{font-size:19px;fill:var(--ink)}
+  .lbl.b{font-weight:700}
+  .lbl.m{fill:var(--muted)}
+  .sm{font-size:15px;fill:var(--muted)}
+  .big{font-size:30px;font-weight:700;fill:var(--ink)}
+  .plus{font-size:22px;font-weight:700;fill:#e8411f;text-anchor:middle;dominant-baseline:central}
+  .minus{font-size:24px;font-weight:700;fill:var(--ink);text-anchor:middle;dominant-baseline:central}
+  .meter{fill:var(--card);stroke:var(--ink);stroke-width:3}
+  .mlet{font-size:22px;font-weight:700;fill:var(--ink);text-anchor:middle;dominant-baseline:central;pointer-events:none}
+  .lcd{fill:var(--lcd);stroke:var(--ink);stroke-width:1.2}
+  .lcdt{fill:var(--lcdt);font-size:17px;font-weight:700;text-anchor:middle;dominant-baseline:central;font-family:Consolas,"DejaVu Sans Mono",monospace}
+  .jdot{fill:var(--ink)}
+  .knode{fill:var(--accent);stroke:var(--card);stroke-width:2}
+  .dbox{fill:none;stroke:var(--muted);stroke-width:1.6;stroke-dasharray:7 5}
+  .iarr{fill:var(--flowc)}
+  .wa{fill:var(--ink)}
+  .term{fill:var(--card);stroke:var(--ink);stroke-width:2.5}
+  .lever{stroke:#e8411f;stroke-width:5;stroke-linecap:round}
+  .sw{cursor:pointer}
+  .sw:focus{outline:none}
+  .hit{fill:transparent;stroke:none}
+  .sw:hover .hit{fill:rgba(15,123,108,.07)}
+  .sw:focus-visible .hit{stroke:var(--accent);stroke-width:2;stroke-dasharray:4 3}
+  .drag{cursor:grab}
+  .drag:active{cursor:grabbing}
+  .lampx{stroke:var(--ink);stroke-width:2.5}
+  .vtag{font-size:18px;font-weight:700}
+  .loop{fill:none;stroke:var(--muted);stroke-width:2.2}
+
+  /* ---------- Σκούρο θέμα ---------- */
+  body.dark{--bg:#0d1219;--card:#161e2b;--ink:#e6ebf2;--muted:#9aa6b8;--line:#2c3a4f;--th:#202c3f;--act:#4a3b10;--lcd:#0b140e;--flowc:#3d9bff;--sl:#2fc4a8;--trk:#4a5a74;--trkb:#7083a3;--thumb:#e6ebf2}
+  body.dark button{background:#202c3f;color:var(--ink)}
+  body.dark button:hover{background:#2a3a55}
+  body.dark button.on{background:#123a33;border-color:#2fc4a8}
+  body.dark .seg button.sel{background:#3d9bff;color:#0b1018;border-color:#3d9bff;font-weight:700}
+  body.dark tr.key td{color:#ffe08a}
+  body.dark kbd{background:#202c3f}
+  body.dark canvas{background:#101824}
+  body.dark .sw:hover .hit{fill:rgba(47,196,168,.1)}
+
+  @media (min-width:1000px){
+    html,body{height:100%}
+    .wrap{max-width:1880px;height:100vh;display:flex;flex-direction:column;padding:10px 18px 10px}
+    h1{font-size:1.4rem}
+    .back{margin:0 0 4px;font-size:.95rem}
+    .sub{margin:0 0 8px;font-size:.95rem}
+    .layout{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1.4fr) minmax(360px,1fr);gap:14px;margin-bottom:10px}
+    .colL,.colR{display:flex;flex-direction:column;min-height:0;min-width:0}
+    .card{padding:12px 14px}
+    #circuitCard{flex:1;min-height:0;margin:0;display:flex;flex-direction:column}
+    .svgbox{flex:1;min-height:120px;aspect-ratio:auto!important}
+    #sv{position:absolute;left:0;top:0;width:100%;height:100%}
+    .colR>.card{margin-bottom:12px}
+    .colR>.card:last-child{flex:1;margin-bottom:0;display:flex;flex-direction:column;min-height:0}
+    #chart{flex:1 1 0;height:0;min-height:90px}
+    details.how{margin:0;flex:0 0 auto}
+    .eq{margin:0 0 6px;font-size:1.15rem}
+    th,td{padding:4px 7px}
+    .status{margin-top:6px}
+  }
+  @media (min-width:1000px) and (max-height:760px){
+    th,td{padding:2px 6px;font-size:.95rem}
+    .card{padding:9px 12px}
+    .colR>.card{margin-bottom:9px}
+    .ctrls{gap:3px 20px;margin-top:4px}
+    .controls{margin-top:4px}
+    .status{font-size:1.02rem;margin-top:3px}
+    .sub{margin-bottom:5px}
+    h2{margin-bottom:5px;font-size:1.05rem}
+    .legend{margin-bottom:5px}
+  }
+
+
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a id="backLink" class="back" href="index.html">← Όλες οι προσομοιώσεις</a>
+  <div class="head">
+    <h1>Μεταβατικά φαινόμενα σε κύκλωμα LR</h1>
+    <button type="button" id="btnTheme" aria-pressed="false">🌙 Σκούρο θέμα</button>
+  </div>
+  <p class="sub">Γύρισε τον διακόπτη <b>S</b> στη <b>θέση 1</b> (σύνδεση της πηγής) και μετά στη <b>θέση 2</b> (αποσύνδεση). Κλικ στον διακόπτη, στο κουμπί ή πλήκτρο <kbd>S</kbd>. Το φαινόμενο εμφανίζεται σε <b>αργή κίνηση</b>.</p>
+
+  <div class="layout">
+    <div class="colL">
+      <div class="card" id="circuitCard">
+        <div class="svgbox" style="aspect-ratio:860 / 400">
+          <svg id="sv" viewBox="0 8 860 400" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Κύκλωμα με πηγή, διακόπτη δύο θέσεων, αμπερόμετρο, αντίσταση R και πηνίο L, με βολτόμετρα στην R και στο πηνίο"></svg>
+        </div>
+        <div class="ctrls">
+          <div class="ctl"><label for="sU">Τάση U</label><input type="range" id="sU" min="0" max="12" step="0.5" value="12"><output for="sU"></output></div>
+          <div class="ctl"><label for="sR">Αντίσταση R</label><input type="range" id="sR" min="10" max="200" step="10" value="100"><output for="sR"></output></div>
+          <div class="ctl"><label for="sL">Αυτεπαγωγή L</label><input type="range" id="sL" min="0.1" max="2" step="0.1" value="1"><output for="sL"></output></div>
+        </div>
+        <div class="controls">
+          <button type="button" id="bPos" style="min-width:15em">S → θέση 1 (σύνδεση)</button><button type="button" id="bPause" style="min-width:7.5em">⏸ Παύση</button><button type="button" id="bReset">↺ Από την αρχή</button>
+          <label class="chk"><input type="checkbox" id="showFlow" checked> Εμφάνιση ροής ρεύματος</label>
+        </div>
+        <p class="status" id="status"></p>
+      </div>
+    </div>
+    <div class="colR">
+      <div class="card">
+        <h2>Μετρήσεις και υπολογισμοί</h2>
+        <div class="eq" id="eq">τ = L / R &nbsp;&nbsp; θέση 1: i = I·(1 − e<sup>−t/τ</sup>) &nbsp;&nbsp; θέση 2: i = I<sub>0</sub>·e<sup>−t/τ</sup></div>
+        <table id="meas"></table>
+      </div>
+      <div class="card">
+        <div class="legend">
+          <h2>Διαγράμματα i(t), u<sub>R</sub>(t), u<sub>L</sub>(t)</h2>
+          <div class="controls"></div>
+        </div>
+        <canvas id="chart" aria-label="Διαγράμματα i(t), u<sub>R</sub>(t), u<sub>L</sub>(t)"></canvas>
+      </div>
+    </div>
+  </div>
+  <details class="card how">
+    <summary>Πώς λειτουργεί</summary>
+    <p class="note">Το <b>πηνίο</b> αντιδρά σε κάθε <b>μεταβολή</b> του ρεύματος που το διαρρέει (αυτεπαγωγή): όταν το ρεύμα αλλάζει, αναπτύσσεται στα άκρα του τάση <b>u<sub>L</sub> = L · Δi / Δt</b> που αντιτίθεται στη μεταβολή. Γι' αυτό το ρεύμα σε ένα κύκλωμα LR <b>δεν αλλάζει απότομα</b>, αλλά σταδιακά. Ο χρόνος αυτός λέγεται <b>μεταβατική κατάσταση</b>.</p>
+    <p class="note"><b>Θέση 1 (σύνδεση της πηγής):</b> τη στιγμή της σύνδεσης όλη η τάση της πηγής εμφανίζεται στο πηνίο και το ρεύμα είναι μηδέν. Μετά το ρεύμα <b>αυξάνεται εκθετικά</b>, i = I · (1 − e<sup>−t/τ</sup>), μέχρι την τελική τιμή <b>I = U / R</b>, ενώ η u<sub>L</sub> μειώνεται προς το μηδέν. Ισχύει πάντα U = u<sub>R</sub> + u<sub>L</sub>.</p>
+    <p class="note">Η <b>σταθερά χρόνου τ = L / R</b> δείχνει πόσο γρήγορα γίνεται η μεταβολή: σε χρόνο <b>τ</b> το ρεύμα φτάνει στο <b>63 %</b> της τελικής τιμής και μετά από <b>5τ</b> θεωρούμε ότι η μεταβατική κατάσταση έχει τελειώσει (99 %). Μεγαλύτερη L ή μικρότερη R σημαίνει πιο αργό φαινόμενο.</p>
+    <p class="note"><b>Θέση 2 (αποσύνδεση):</b> το πηνίο «κρατά» το ρεύμα με την ίδια φορά, το οποίο <b>μειώνεται εκθετικά</b>, i = I<sub>0</sub> · e<sup>−t/τ</sup>, και σε χρόνο τ πέφτει στο <b>37 %</b>. Η τάση του πηνίου <b>αλλάζει πολικότητα</b>. Η ενέργεια του μαγνητικού πεδίου <b>W = ½ · L · i<sup>2</sup></b> γίνεται θερμότητα στην R. Αν απλώς ανοίγαμε το κύκλωμα, το ρεύμα θα μηδενιζόταν απότομα και η μεγάλη τάση αυτεπαγωγής θα προκαλούσε σπινθήρα στον διακόπτη.</p>
+  </details>
+</div>
+<script>
+/* ===== Κοινά εργαλεία των προσομοιώσεων ηλεκτροτεχνίας (Ι. Δούφλιας, άδεια MIT) ===== */
+var NS = 'http://www.w3.org/2000/svg', dark = false;
+function $(id){ return document.getElementById(id); }
+
+/* ---------- μορφοποίηση αριθμών (υποδιαστολή με κόμμα) ---------- */
+function eng(v, unit, dig){
+  dig = dig || 3;
+  if (v === null || v === undefined || !isFinite(v)) return '—';
+  var a = Math.abs(v); if (a < 1e-12) return '0 ' + unit;
+  var P = [[1e6,'M'],[1e3,'k'],[1,''],[1e-3,'m'],[1e-6,'µ']], s = P[P.length-1];
+  for (var i = 0; i < P.length; i++) if (a >= P[i][0] * 0.9995){ s = P[i]; break; }
+  var n = v / s[0], m = Math.abs(n);
+  var t = m >= 99.95 ? n.toFixed(Math.max(0, dig-3)) : m >= 9.995 ? n.toFixed(Math.max(0, dig-2)) : n.toFixed(Math.max(0, dig-1));
+  return t.replace('.', ',').replace('-', '−') + ' ' + s[1] + unit;
+}
+function nf(v, d){ if (Math.abs(v) < 0.5 * Math.pow(10, -d)) v = 0; return v.toFixed(d).replace('.', ',').replace('-', '−'); }
+function ohm(v){ return (v > 0 && v < 0.9995) ? nf(v, 3) + ' Ω' : eng(v, 'Ω'); }
+function ft(v){ var s = String(Number(v.toPrecision(6))); return s.replace('.', ',').replace('-', '−'); }
+
+/* ---------- SVG ---------- */
+var SV = $('sv'), LY = {}, REG = {};
+var DEFS =
+  '<radialGradient id="glow" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#ff5a2a" stop-opacity=".75"/><stop offset="60%" stop-color="#ff5a2a" stop-opacity=".2"/><stop offset="100%" stop-color="#ff5a2a" stop-opacity="0"/></radialGradient>' +
+  '<radialGradient id="lglow" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#ffd23a" stop-opacity=".95"/><stop offset="55%" stop-color="#ffd23a" stop-opacity=".3"/><stop offset="100%" stop-color="#ffd23a" stop-opacity="0"/></radialGradient>' +
+  '<marker id="wah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path class="wa" d="M0,0 L10,5 L0,10 z"/></marker>' +
+  '<marker id="lah" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path style="fill:var(--muted)" d="M0,0 L10,5 L0,10 z"/></marker>';
+function mk(tag, at, par, txt){
+  var e = document.createElementNS(NS, tag);
+  if (at) for (var k in at) if (at[k] !== undefined) e.setAttribute(k, at[k]);
+  (par || SV).appendChild(e);
+  if (txt !== undefined && txt !== null) e.textContent = txt;
+  return e;
+}
+function P(pts){ return pts.map(function(p){ return p[0] + ',' + p[1]; }).join(' '); }
+function clearSVG(){
+  SV.innerHTML = ''; REG = {};
+  var d = mk('defs', null, SV); d.innerHTML = DEFS;
+  LY.w = mk('g', null, SV); LY.f = mk('g', null, SV); LY.c = mk('g', null, SV); LY.t = mk('g', null, SV);
+}
+function reg(id, e){ if (id){ (REG[id] = REG[id] || []).push(e); } return e; }
+function R_(id){ return REG[id] || []; }
+
+/* αγωγοί: ένα id ανά κόμβο, το χρώμα δείχνει το δυναμικό */
+var VMIN = 0, VMAX = 12;
+function vColor(v){
+  var t = Math.max(0, Math.min(1, (v - VMIN) / ((VMAX - VMIN) || 1)));
+  var c0 = [138,148,166], c1 = [232,65,31];
+  return 'rgb(' + Math.round(c0[0]+(c1[0]-c0[0])*t) + ',' + Math.round(c0[1]+(c1[1]-c0[1])*t) + ',' + Math.round(c0[2]+(c1[2]-c0[2])*t) + ')';
+}
+function W(id, pts){ return reg(id, mk('polyline', {'class':'wire', points:P(pts), stroke:vColor(0)}, LY.w)); }
+function setV(id, v){ R_(id).forEach(function(e){ e.setAttribute('stroke', vColor(v)); }); }
+function setPts(id, pts){ R_(id).forEach(function(e){ e.setAttribute('points', P(pts)); }); }
+function dot(x, y){ return mk('circle', {cx:x, cy:y, r:5.5, 'class':'jdot'}, LY.c); }
+
+/* ροή ρεύματος: μπλε κουκκίδες στη συμβατική φορά, ταχύτητα ανάλογη του ρεύματος */
+function F(id, pts){ return reg(id, mk('polyline', {'class':'flow off', points:P(pts)}, LY.f)); }
+function setI(id, I, Iref){
+  R_(id).forEach(function(e){
+    var a = Math.abs(I);
+    if (a < 1e-7){ e.classList.add('off'); return; }
+    e.classList.remove('off');
+    var t = Math.min(1, a / (Iref || 1));
+    e.style.animationDuration = (1.9 / (0.3 + 2.4 * t)).toFixed(2) + 's';
+    e.style.animationDirection = I < 0 ? 'reverse' : 'normal';
+  });
+}
+
+/* κείμενα */
+function T(x, y, s, cls, at){
+  at = at || {}; var id = at.id; delete at.id;
+  at.x = x; at.y = y; at['class'] = cls || 'lbl';
+  return reg(id, mk('text', at, LY.t, s));
+}
+function setT(id, s){ R_(id).forEach(function(e){ e.textContent = s; }); }
+function labels(cx, cy, dir, o, ext){
+  var s = o.side || (dir === 'v' ? 'right' : 'top'), x, y1, y2, anc;
+  if (s === 'top'){ x = cx; y1 = cy - ext - 28; y2 = cy - ext - 7; anc = 'middle'; }
+  else if (s === 'bottom'){ x = cx; y1 = cy + ext + 21; y2 = cy + ext + 42; anc = 'middle'; }
+  else if (s === 'right'){ x = cx + ext + 8; y1 = cy - 5; y2 = cy + 17; anc = 'start'; }
+  else { x = cx - ext - 8; y1 = cy - 5; y2 = cy + 17; anc = 'end'; }
+  if (o.name) T(x, y1, o.name, 'lbl b', {'text-anchor':anc});
+  if (o.val) T(x, y2, o.txt || '', 'lbl', {'text-anchor':anc, id:o.val});
+}
+
+/* αντίσταση: μήκος 60, ακροδέκτες στα ±30 */
+function Rz(cx, cy, dir, o){
+  o = o || {}; var g = mk('g', null, LY.c), v = dir === 'v', pts = [[-30,0]];
+  for (var i = 0; i < 6; i++) pts.push([-25 + i*10, i % 2 ? -11 : 11]);
+  pts.push([30, 0]);
+  if (o.halo) reg(o.halo, mk('circle', {cx:cx, cy:cy, r:0, fill:'url(#glow)'}, g));
+  mk('rect', v ? {x:cx-15, y:cy-31, width:30, height:62, 'class':'mask'} : {x:cx-31, y:cy-15, width:62, height:30, 'class':'mask'}, g);
+  mk('polyline', {'class':'comp', points:P(pts.map(function(p){ return v ? [cx+p[1], cy+p[0]] : [cx+p[0], cy+p[1]]; }))}, g);
+  labels(cx, cy, dir, o, 14);
+}
+/* μεταβλητή αντίσταση (ροοστάτης, ποτενσιόμετρο): από a έως b στον άξονα */
+function Rlong(a, b, c, dir, teeth){
+  var g = mk('g', null, LY.c), v = dir === 'v', L = b - a, n = teeth, st = L / n, pts = [[a, 0]];
+  for (var i = 0; i < n; i++) pts.push([a + st/2 + i*st, i % 2 ? -11 : 11]);
+  pts.push([b, 0]);
+  mk('rect', v ? {x:c-15, y:a-1, width:30, height:L+2, 'class':'mask'} : {x:a-1, y:c-15, width:L+2, height:30, 'class':'mask'}, g);
+  mk('polyline', {'class':'comp', points:P(pts.map(function(p){ return v ? [c+p[1], p[0]] : [p[0], c+p[1]]; }))}, g);
+  return g;
+}
+/* στοιχείο (πηγή): s = −1 → ο θετικός πόλος (μακριά πλάκα) προς τα αριστερά / πάνω, s = +1 → δεξιά / κάτω.
+   ακροδέκτες στα ±5 πάνω στον άξονα */
+function Cell(cx, cy, dir, s, o){
+  o = o || {}; var g = mk('g', null, LY.c), v = dir === 'v';
+  function L(a, len){ return v ? {x1:cx-len, y1:cy+a, x2:cx+len, y2:cy+a} : {x1:cx+a, y1:cy-len, x2:cx+a, y2:cy+len}; }
+  mk('rect', v ? {x:cx-24, y:cy-4, width:48, height:8, 'class':'mask'} : {x:cx-4, y:cy-24, width:8, height:48, 'class':'mask'}, g);
+  var a1 = L(5*s, o.small ? 16 : 20); a1['class'] = 'plate'; mk('line', a1, g);
+  var a2 = L(-5*s, o.small ? 8 : 10); a2['class'] = 'plate thick'; mk('line', a2, g);
+  if (!o.noplus){
+    var side = o.side || (v ? 'left' : 'top');
+    if (v) mk('text', {x: side === 'right' ? cx-32 : cx+32, y: cy + 5*s + 9*s, 'class':'plus'}, g, '+');
+    else mk('text', {x: cx + 5*s + 10*s, y: side === 'top' ? cy+32 : cy-30, 'class':'plus'}, g, '+');
+  }
+  if (o.name || o.val) labels(cx, cy, dir, o, v ? 22 : 22);
+  return g;
+}
+/* πηνίο κατακόρυφο: από y1 έως y1+80, 4 σπείρες προς τα δεξιά */
+function Coil(cx, y1, o){
+  o = o || {}; var g = mk('g', null, LY.c);
+  mk('rect', {x:cx-4, y:y1-1, width:24, height:82, 'class':'mask'}, g);
+  mk('path', {d:'M' + cx + ',' + y1 + ' a10,10 0 0 1 0,20 a10,10 0 0 1 0,20 a10,10 0 0 1 0,20 a10,10 0 0 1 0,20', 'class':'comp'}, g);
+  labels(cx, y1 + 40, 'v', o, 10);
+}
+/* όργανο μέτρησης: κύκλος r = 20 και οθόνη με την ένδειξη */
+function Meter(id, cx, cy, letter, lx, ly, w){
+  var g = mk('g', null, LY.c);
+  mk('circle', {cx:cx, cy:cy, r:20, 'class':'meter'}, g);
+  mk('text', {x:cx, y:cy+1, 'class':'mlet'}, g, letter);
+  w = w || 92;
+  var t = mk('g', null, LY.t);
+  mk('rect', {x:lx - w/2, y:ly - 13, width:w, height:26, rx:5, 'class':'lcd'}, t);
+  reg(id, mk('text', {x:lx, y:ly + 1, 'class':'lcdt'}, t, ''));
+}
+function setM(id, s){ setT(id, s); }
+/* λαμπτήρας */
+function Lamp(id, cx, cy){
+  var g = mk('g', null, LY.c);
+  reg(id + '_h', mk('circle', {cx:cx, cy:cy, r:0, fill:'url(#lglow)'}, g));
+  reg(id + '_b', mk('circle', {cx:cx, cy:cy, r:20, 'class':'meter'}, g));
+  mk('line', {x1:cx-14, y1:cy-14, x2:cx+14, y2:cy+14, 'class':'lampx'}, g);
+  mk('line', {x1:cx-14, y1:cy+14, x2:cx+14, y2:cy-14, 'class':'lampx'}, g);
+}
+function mixHex(a, b, t){
+  function h(c){ return [parseInt(c.substr(1,2),16), parseInt(c.substr(3,2),16), parseInt(c.substr(5,2),16)]; }
+  var x = h(a), y = h(b);
+  return 'rgb(' + Math.round(x[0]+(y[0]-x[0])*t) + ',' + Math.round(x[1]+(y[1]-x[1])*t) + ',' + Math.round(x[2]+(y[2]-x[2])*t) + ')';
+}
+function setLamp(id, b){
+  b = Math.max(0, Math.min(1, b));
+  R_(id + '_h').forEach(function(e){ e.setAttribute('r', b > 0.01 ? (24 + 46*b).toFixed(1) : 0); e.setAttribute('opacity', (0.35 + 0.65*b).toFixed(2)); });
+  R_(id + '_b').forEach(function(e){ e.style.fill = b > 0.01 ? mixHex(dark ? '#161e2b' : '#ffffff', '#ffd23a', 0.25 + 0.75*b) : ''; });
+}
+function setHalo(id, b){
+  b = Math.max(0, Math.min(1, b));
+  R_(id).forEach(function(e){ e.setAttribute('r', b > 0.01 ? (22 + 38*b).toFixed(1) : 0); e.setAttribute('opacity', (0.3 + 0.7*b).toFixed(2)); });
+}
+/* διακόπτης: οριζόντιος (x..x+50) ή κατακόρυφος (y..y+50) */
+function Sw(id, x, y, dir, label, cb){
+  var v = dir === 'v';
+  var g = mk('g', {'class':'sw', tabindex:0, role:'switch', 'aria-label':'Διακόπτης ' + label}, LY.c);
+  mk('rect', v ? {x:x-16, y:y-8, width:52, height:66, rx:8, 'class':'hit'} : {x:x-8, y:y-40, width:66, height:52, rx:8, 'class':'hit'}, g);
+  var lev = mk('line', {x1:x, y1:y, x2:v?x:x+50, y2:v?y+50:y, 'class':'lever'}, g);
+  mk('circle', {cx:x, cy:y, r:5, 'class':'term'}, g);
+  mk('circle', {cx:v?x:x+50, cy:v?y+50:y, r:5, 'class':'term'}, g);
+  if (v) mk('text', {x:x-14, y:y+32, 'class':'lbl b', 'text-anchor':'end'}, g, label);
+  else mk('text', {x:x+25, y:y+30, 'class':'lbl b', 'text-anchor':'middle'}, g, label);
+  g._lev = lev; g._v = v; g._x = x; g._y = y;
+  g.addEventListener('click', cb);
+  g.addEventListener('keydown', function(e){ if (e.key === ' ' || e.key === 'Enter'){ e.preventDefault(); cb(); } });
+  REG[id] = [g];
+}
+function setSw(id, on){
+  var g = R_(id)[0]; if (!g) return; var l = g._lev;
+  if (g._v){ l.setAttribute('x2', on ? g._x : g._x + 26); l.setAttribute('y2', on ? g._y + 50 : g._y + 43); }
+  else { l.setAttribute('x2', on ? g._x + 50 : g._x + 45); l.setAttribute('y2', on ? g._y : g._y - 25); }
+  g.setAttribute('aria-checked', on ? 'true' : 'false');
+}
+/* βελάκι φοράς ρεύματος */
+function Arr(id, x, y, d){
+  var p = {r:[[-8,-8],[8,0],[-8,8]], l:[[8,-8],[-8,0],[8,8]], u:[[-8,8],[0,-8],[8,8]], d:[[-8,-8],[0,8],[8,-8]]}[d];
+  return reg(id, mk('polygon', {'class':'iarr', points:P(p.map(function(q){ return [x+q[0], y+q[1]]; }))}, LY.t));
+}
+function show(id, on){ R_(id).forEach(function(e){ e.style.display = on ? '' : 'none'; }); }
+
+/* σύρσιμο με το ποντίκι/δάχτυλο: fn(σημείο στις συντεταγμένες του SVG) */
+function svgPt(e){ var p = SV.createSVGPoint(); p.x = e.clientX; p.y = e.clientY; return p.matrixTransform(SV.getScreenCTM().inverse()); }
+function makeDrag(el, fn){
+  var on = false;
+  el.addEventListener('pointerdown', function(e){ on = true; try { el.setPointerCapture(e.pointerId); } catch(x){} fn(svgPt(e)); e.preventDefault(); });
+  el.addEventListener('pointermove', function(e){ if (on) fn(svgPt(e)); });
+  el.addEventListener('pointerup', function(){ on = false; });
+  el.addEventListener('pointercancel', function(){ on = false; });
+}
+function setSlider(id, v){ var e = $(id); e.value = v; e.dispatchEvent(new Event('input')); }
+
+/* ---------- πίνακας μετρήσεων ---------- */
+function setMeas(rows){
+  var h = '<thead><tr><th>Μέγεθος</th><th>Σχέση</th><th style="text-align:right">Τιμή</th></tr></thead><tbody>';
+  rows.forEach(function(r){ h += '<tr' + (r[3] ? ' class="key"' : '') + '><td>' + r[0] + '</td><td class="f">' + (r[1] || '') + '</td><td class="v">' + r[2] + '</td></tr>'; });
+  $('meas').innerHTML = h + '</tbody>';
+}
+
+/* ---------- ρυθμιστικά ---------- */
+function slider(id, fmt, cb){
+  var e = $(id), o = e.parentNode.querySelector('output');
+  function f(){ o.textContent = fmt(+e.value); e.style.setProperty('--p', ((+e.value - +e.min) / ((+e.max - +e.min) || 1) * 100) + '%'); }
+  e.addEventListener('input', function(){ f(); cb(); });
+  f();
+}
+function gv(id){ return +$(id).value; }
+function segBtns(ids, cb){
+  ids.forEach(function(id){ $(id).addEventListener('click', function(){ ids.forEach(function(j){ $(j).classList.toggle('sel', j === id); }); cb(id); }); });
+}
+
+/* ---------- γραφήματα (canvas) ---------- */
+var CV = $('chart'), CX = CV.getContext('2d'), drawChart = function(){};
+function resizeChart(){
+  var d = window.devicePixelRatio || 1, w = CV.clientWidth, h = CV.clientHeight;
+  if (!w || !h) return;
+  CV.width = Math.round(w*d); CV.height = Math.round(h*d);
+  CX.setTransform(d, 0, 0, d, 0, 0);
+  drawChart();
+}
+window.addEventListener('resize', resizeChart);
+try { new ResizeObserver(resizeChart).observe(CV); } catch(e){}
+var FONT = 'Calibri, Carlito, "Segoe UI", Arial, sans-serif';
+function PAL(){
+  return dark ? {grid:'#253246', axis:'#4a5a72', txt:'#9aa6b8', ink:'#e6ebf2', bg:'#101824', c:['#5b9bff','#2fc4a8','#ff6a4a','#f0b429','#b98cff','#9aa6b8']}
+              : {grid:'#e6eaf0', axis:'#9aa6b8', txt:'#5b6475', ink:'#1d2433', bg:'#fcfdfe', c:['#2f6fd6','#0f7b6c','#e8411f','#b26a00','#7b3fbf','#8a94a6']};
+}
+function niceStep(range, n){
+  var r = range / Math.max(1, n), p = Math.pow(10, Math.floor(Math.log10(r))), m = r / p;
+  return (m < 1.5 ? 1 : m < 3 ? 2 : m < 7 ? 5 : 10) * p;
+}
+function niceCeil(v){ if (v <= 0) return 1; var s = niceStep(v, 5); return Math.ceil(v / s - 1e-9) * s; }
+function ln(x1, y1, x2, y2){ CX.beginPath(); CX.moveTo(x1, y1); CX.lineTo(x2, y2); CX.stroke(); }
+
+/* o: xmin,xmax,ymin,ymax,xlab,ylab,xs,ys (κλίμακα ετικετών), curves:[{f|pts,color,dash,w,ax}], rec:[{x,y}], cur:{x,y,color,ax},
+      y2:{ymin,ymax,ylab,ys}, legend:[{name,color,dash}] */
+function lineChart(o){
+  var w = CV.clientWidth, h = CV.clientHeight; if (!w || !h) return;
+  var C = PAL(); CX.clearRect(0, 0, w, h);
+  var l = 52, r = o.y2 ? 52 : 16, t = 24, b = 38, pw = w - l - r, ph = h - t - b;
+  if (pw < 40 || ph < 30) return;
+  function X(x){ return l + (x - o.xmin) / (o.xmax - o.xmin) * pw; }
+  function Y(y, ax){ ax = ax === 2 ? o.y2 : o; return t + ph - (y - ax.ymin) / (ax.ymax - ax.ymin) * ph; }
+  CX.font = '13px ' + FONT; CX.lineWidth = 1;
+  var sx = niceStep(o.xmax - o.xmin, Math.max(2, Math.floor(pw / 70))), sy = niceStep(o.ymax - o.ymin, Math.max(2, Math.floor(ph / 32)));
+  CX.strokeStyle = C.grid; CX.fillStyle = C.txt; CX.textAlign = 'center'; CX.textBaseline = 'top';
+  for (var x = Math.ceil(o.xmin / sx - 1e-9) * sx; x <= o.xmax + 1e-9; x += sx){ var px = X(x); ln(px, t, px, t + ph); CX.fillText(ft(x * (o.xs || 1)), px, t + ph + 4); }
+  CX.textAlign = 'right'; CX.textBaseline = 'middle';
+  for (var y = Math.ceil(o.ymin / sy - 1e-9) * sy; y <= o.ymax + 1e-9; y += sy){ var py = Y(y); ln(l, py, l + pw, py); CX.fillText(ft(y * (o.ys || 1)), l - 6, py); }
+  if (o.y2){
+    var a = o.y2, s2 = niceStep(a.ymax - a.ymin, Math.max(2, Math.floor(ph / 32)));
+    CX.textAlign = 'left';
+    for (var y2 = Math.ceil(a.ymin / s2 - 1e-9) * s2; y2 <= a.ymax + 1e-9; y2 += s2) CX.fillText(ft(y2 * (a.ys || 1)), l + pw + 6, Y(y2, 2));
+  }
+  CX.strokeStyle = C.axis; CX.lineWidth = 1.5; ln(l, t, l, t + ph); ln(l, t + ph, l + pw, t + ph); if (o.y2) ln(l + pw, t, l + pw, t + ph);
+  CX.font = 'bold 14px ' + FONT; CX.textBaseline = 'alphabetic';
+  CX.fillStyle = o.ylabColor || C.txt; CX.textAlign = 'left'; CX.fillText(o.ylab || '', 6, 15);
+  if (o.y2){ CX.fillStyle = o.y2.color || C.txt; CX.textAlign = 'right'; CX.fillText(o.y2.ylab || '', w - 6, 15); }
+  CX.fillStyle = C.txt;
+  if (o.legendRow){ CX.textAlign = 'right'; CX.fillText(o.xlab || '', l + pw, h - 4); }
+  else { CX.textAlign = 'center'; CX.fillText(o.xlab || '', l + pw/2, h - 4); }
+  CX.save(); CX.beginPath(); CX.rect(l, t - 2, pw, ph + 4); CX.clip();
+  (o.curves || []).forEach(function(c){
+    CX.strokeStyle = c.color; CX.lineWidth = c.w || 2.5; CX.setLineDash(c.dash || []); CX.beginPath();
+    var pts = c.pts;
+    if (!pts){ pts = []; for (var i = 0; i <= 240; i++){ var xx = o.xmin + (o.xmax - o.xmin) * i / 240; pts.push([xx, c.f(xx)]); } }
+    var started = false;
+    pts.forEach(function(p){ if (!isFinite(p[1])){ started = false; return; } var X1 = X(p[0]), Y1 = Y(p[1], c.ax); if (!started){ CX.moveTo(X1, Y1); started = true; } else CX.lineTo(X1, Y1); });
+    CX.stroke(); CX.setLineDash([]);
+  });
+  (o.rec || []).forEach(function(p){ CX.strokeStyle = p.color || C.ink; CX.fillStyle = C.bg; CX.lineWidth = 2; CX.beginPath(); CX.arc(X(p.x), Y(p.y, p.ax), 5, 0, 7); CX.fill(); CX.stroke(); });
+  CX.restore();
+  (o.vmarks || []).forEach(function(m){
+    var px = X(m.x); if (px < l || px > l + pw + 0.5) return;
+    CX.strokeStyle = C.axis; CX.lineWidth = 1; CX.setLineDash([3,4]); ln(px, t, px, t + ph); CX.setLineDash([]);
+    CX.fillStyle = C.txt; CX.font = 'bold 12px ' + FONT; CX.textAlign = 'center'; CX.textBaseline = 'bottom'; CX.fillText(m.label, px, t - 1);
+  });
+  (o.hmarks || []).forEach(function(m){
+    var py = Y(m.y, m.ax); if (py < t || py > t + ph) return;
+    CX.strokeStyle = m.color || C.axis; CX.lineWidth = 1; CX.setLineDash([2,4]); ln(l, py, l + pw, py); CX.setLineDash([]);
+    CX.fillStyle = m.color || C.txt; CX.font = '12px ' + FONT; CX.textAlign = 'left'; CX.textBaseline = 'bottom'; CX.fillText(m.label, l + 4, py - 1);
+  });
+  (o.cur ? [].concat(o.cur) : []).forEach(function(c){
+    var cx = X(c.x), cy = Y(c.y, c.ax);
+    if (cx < l - 1 || cx > l + pw + 1 || cy < t - 1 || cy > t + ph + 1) return;
+    CX.strokeStyle = c.color; CX.lineWidth = 1.2; CX.setLineDash([4, 4]);
+    if (c.ax === 2) ln(cx, cy, l + pw, cy); else ln(cx, cy, l, cy);
+    ln(cx, cy, cx, t + ph); CX.setLineDash([]);
+    CX.fillStyle = c.color; CX.beginPath(); CX.arc(cx, cy, 6.5, 0, 7); CX.fill();
+  });
+  if (o.legend && o.legendRow){
+    CX.font = 'bold 13px ' + FONT; CX.textBaseline = 'middle'; CX.textAlign = 'left';
+    var lx = 6, ly = h - 10;
+    o.legend.forEach(function(g){
+      CX.strokeStyle = g.color; CX.lineWidth = 3; CX.setLineDash(g.dash || []); ln(lx, ly, lx + 18, ly); CX.setLineDash([]);
+      CX.fillStyle = g.color; CX.fillText(g.name, lx + 23, ly); lx += 23 + CX.measureText(g.name).width + 16;
+    });
+  } else if (o.legend){
+    CX.font = 'bold 13px ' + FONT; CX.textBaseline = 'middle'; CX.textAlign = 'left';
+    var lw = 0; o.legend.forEach(function(g){ lw = Math.max(lw, CX.measureText(g.name).width); });
+    var bx = o.legendLeft ? l + 8 : l + pw - lw - 44, by = o.legendBottom ? t + ph - 8 - o.legend.length * 18 : t + 6;
+    CX.fillStyle = C.bg; CX.globalAlpha = .88; CX.fillRect(bx - 4, by - 2, lw + 40, o.legend.length * 18 + 4); CX.globalAlpha = 1;
+    o.legend.forEach(function(g, i){
+      var yy = by + 9 + i * 18;
+      CX.strokeStyle = g.color; CX.lineWidth = 2.5; CX.setLineDash(g.dash || []); ln(bx, yy, bx + 24, yy); CX.setLineDash([]);
+      CX.fillStyle = g.color; CX.fillText(g.name, bx + 30, yy);
+    });
+  }
+}
+/* ραβδόγραμμα σε τμήμα του canvas: o = {title, fmt, max, bars:[{label, segs:[{v,color,name}]}]} */
+function barPanel(o, rx, rw){
+  var h = CV.clientHeight, C = PAL();
+  var l = rx + 50, r = 10, t = 26, b = 40, pw = rw - 50 - r, ph = h - t - b;
+  if (pw < 40 || ph < 30) return;
+  var tot = o.bars.map(function(B){ return B.segs.reduce(function(s, q){ return s + Math.max(0, q.v); }, 0); });
+  var max = o.max || niceCeil(Math.max.apply(null, tot.concat([1e-9])) * 1.12);
+  function Y(v){ return t + ph - v / max * ph; }
+  CX.font = '13px ' + FONT; CX.lineWidth = 1; CX.strokeStyle = C.grid; CX.fillStyle = C.txt; CX.textAlign = 'right'; CX.textBaseline = 'middle';
+  var st = niceStep(max, Math.max(2, Math.floor(ph / 32)));
+  for (var v = 0; v <= max + 1e-12; v += st){ ln(l, Y(v), l + pw, Y(v)); CX.fillText(o.tick ? o.tick(v) : ft(v), l - 6, Y(v)); }
+  CX.strokeStyle = C.axis; CX.lineWidth = 1.5; ln(l, t, l, t + ph); ln(l, t + ph, l + pw, t + ph);
+  CX.font = 'bold 14px ' + FONT; CX.textAlign = 'left'; CX.textBaseline = 'alphabetic'; CX.fillStyle = C.txt; CX.fillText(o.title || '', rx + 6, 15);
+  var slot = pw / o.bars.length, bw = Math.min(70, slot * 0.6);
+  o.bars.forEach(function(B, i){
+    var cx = l + slot * (i + 0.5), y0 = t + ph;
+    B.segs.forEach(function(q){
+      var hh = Math.max(0, q.v) / max * ph; if (hh <= 0) return;
+      CX.fillStyle = q.color; CX.globalAlpha = .88; CX.fillRect(cx - bw/2, y0 - hh, bw, hh); CX.globalAlpha = 1;
+      CX.strokeStyle = C.bg; CX.lineWidth = 1.5; CX.strokeRect(cx - bw/2, y0 - hh, bw, hh);
+      if (hh > 17 && q.name){ CX.fillStyle = '#fff'; CX.font = 'bold 13px ' + FONT; CX.textAlign = 'center'; CX.textBaseline = 'middle'; CX.fillText(q.name, cx, y0 - hh/2); }
+      y0 -= hh;
+    });
+    CX.fillStyle = C.ink; CX.font = 'bold 13px ' + FONT; CX.textAlign = 'center'; CX.textBaseline = 'bottom';
+    CX.fillText(o.fmt(tot[i]), cx, y0 - 3);
+    CX.fillStyle = C.txt; CX.font = '13px ' + FONT; CX.textBaseline = 'top';
+    String(B.label).split('\n').forEach(function(s, k){ CX.fillText(s, cx, t + ph + 4 + k * 15); });
+  });
+}
+function clearChart(){ var w = CV.clientWidth, h = CV.clientHeight; CX.clearRect(0, 0, w, h); }
+
+/* ---------- θέμα, iframe, ροή ---------- */
+var onTheme = function(){};
+function setTheme(d){
+  dark = d;
+  document.body.classList.toggle('dark', d);
+  var bt = $('btnTheme');
+  bt.textContent = d ? '☀️ Φωτεινό θέμα' : '🌙 Σκούρο θέμα';
+  bt.setAttribute('aria-pressed', d ? 'true' : 'false');
+  try { localStorage.setItem('gateSimTheme', d ? 'dark' : 'light'); } catch(e){}
+  $('backLink').href = 'index.html' + (d ? '#dark' : '#light');
+  onTheme(); drawChart();
+}
+try { if (window.self !== window.top) document.body.classList.add('embedded'); }
+catch(e){ document.body.classList.add('embedded'); }
+$('btnTheme').addEventListener('click', function(){ setTheme(!dark); });
+$('showFlow').addEventListener('change', function(){ $('circuitCard').classList.toggle('noflow', !this.checked); });
+function initTheme(){
+  var h = (location.hash || '').toLowerCase(), saved = null;
+  try { saved = localStorage.getItem('gateSimTheme'); } catch(e){}
+  if (h === '#dark') setTheme(true); else if (h === '#light') setTheme(false); else setTheme(saved === 'dark');
+}
+
+</script>
+<script>
+(function(){
+
+VMAX = 12;
+var pos = 2, i = 0, t = 0, i0 = 0, tr = [], paused = false;
+var C1 = [260,70], C2 = [260,130], PV = [320,100];
+function tau(){ return gv('sL') / gv('sR'); }
+function Ifin(){ return pos === 1 ? gv('sU') / gv('sR') : 0; }
+function newEvent(){ t = 0; i0 = i; tr = [sample()]; }
+function sample(){ var R = gv('sR'), U = gv('sU'); return {t:t, i:i, uR:i*R, uL:(pos === 1 ? U : 0) - i*R}; }
+function setPos(p){ pos = p; newEvent(); update(); }
+function toggle(){ setPos(pos === 1 ? 2 : 1); }
+function build(){
+  clearSVG();
+  W('nP',[[110,235],[110,70],[260,70]]);
+  W('n0',[[260,130],[220,130],[220,380]]); W('n0',[[110,245],[110,380],[680,380],[680,300]]);
+  W('n0',[[800,280],[800,380],[680,380]]); dot(220,380); dot(680,380);
+  W('nS',[[320,100],[380,100]]); W('nS',[[420,100],[490,100]]); W('nS',[[478,100],[478,40],[500,40]]); dot(478,100);
+  W('nM',[[550,100],[680,100],[680,220]]); W('nM',[[562,100],[562,40],[540,40]]); dot(562,100);
+  W('nM',[[680,100],[800,100],[800,240]]); dot(680,100);
+  F('fc',[[320,100],[680,100],[680,380],[220,380]]);
+  F('fA',[[220,380],[110,380],[110,245]]); F('fA',[[110,235],[110,70],[260,70],[320,100]]);
+  F('fB',[[220,380],[220,130],[260,130],[320,100]]);
+  Cell(110,240,'v',-1,{name:'U', val:'tU', side:'left'});
+  Meter('mA',400,100,'A',400,138,88);
+  Rz(520,100,'h',{name:'R', val:'tR', side:'bottom'});
+  Meter('mVR',520,40,'V',433,40,80);
+  Coil(680,220,{name:'L', val:'tL', side:'left'});
+  Meter('mVL',800,260,'V',746,260,84);
+  T(708,232,'','plus',{id:'pTop'}); T(708,296,'','plus',{id:'pBot'});
+  T(840,236,'uL','lbl b',{'text-anchor':'end'}); T(560,30,'uR','lbl b',{'text-anchor':'middle'});
+  /* διακόπτης δύο θέσεων */
+  var g = mk('g',{'class':'sw', tabindex:0, role:'button', 'aria-label':'Διακόπτης S δύο θέσεων'}, LY.c);
+  mk('rect',{x:232, y:50, width:104, height:100, rx:8, 'class':'hit'}, g);
+  reg('lever', mk('line',{x1:PV[0], y1:PV[1], x2:C2[0], y2:C2[1], 'class':'lever'}, g));
+  [C1, C2, PV].forEach(function(c){ mk('circle',{cx:c[0], cy:c[1], r:5, 'class':'term'}, g); });
+  mk('text',{x:250, y:60, 'class':'lbl b', 'text-anchor':'end'}, g, '1');
+  mk('text',{x:250, y:150, 'class':'lbl b', 'text-anchor':'end'}, g, '2');
+  mk('text',{x:330, y:80, 'class':'lbl b'}, g, 'S');
+  g.addEventListener('click', toggle);
+  g.addEventListener('keydown', function(e){ if (e.key === ' ' || e.key === 'Enter'){ e.preventDefault(); toggle(); } });
+}
+function pm(v){
+  var a = R_('pTop')[0], b = R_('pBot')[0];
+  if (Math.abs(v) < 0.02){ a.textContent = ''; b.textContent = ''; return; }
+  a.textContent = v > 0 ? '+' : '−'; b.textContent = v > 0 ? '−' : '+';
+  a.setAttribute('class', v > 0 ? 'plus' : 'minus'); b.setAttribute('class', v > 0 ? 'minus' : 'plus');
+}
+function update(){
+  var U = gv('sU'), R = gv('sR'), L = gv('sL'), ta = tau(), s = sample(), If = Ifin();
+  var c = pos === 1 ? C1 : C2, lv = R_('lever')[0]; lv.setAttribute('x2', c[0]); lv.setAttribute('y2', c[1]);
+  setV('nP',U); setV('n0',0); setV('nS', pos === 1 ? U : 0); setV('nM', s.uL);
+  setI('fc', i, 0.12); setI('fA', pos === 1 ? i : 0, 0.12); setI('fB', pos === 2 ? i : 0, 0.12);
+  setT('tU', eng(U,'V')); setT('tR', ohm(R)); setT('tL', nf(L,1) + ' H');
+  setM('mA', eng(i,'A')); setM('mVR', eng(s.uR,'V')); setM('mVL', eng(s.uL,'V'));
+  pm(s.uL);
+  var k = t / ta;
+  setMeas([
+    ['Σταθερά χρόνου τ', 'L / R = ' + nf(L,1) + ' H / ' + ohm(R), eng(ta,'s')],
+    [pos === 1 ? 'Τελικό ρεύμα I' : 'Αρχικό ρεύμα I<sub>0</sub>', pos === 1 ? 'U / R' : 'τη στιγμή της αλλαγής', eng(pos === 1 ? If : i0,'A')],
+    ['Ρεύμα <i>i</i>', pos === 1 ? 'I · (1 − e<sup>−t/τ</sup>)' : 'I<sub>0</sub> · e<sup>−t/τ</sup>', eng(i,'A'), true],
+    ['Τάση αντίστασης u<sub>R</sub>', 'i · R', eng(s.uR,'V')],
+    ['Τάση πηνίου u<sub>L</sub>', pos === 1 ? 'U − u<sub>R</sub>' : '− u<sub>R</sub>', eng(s.uL,'V'), true],
+    ['Ενέργεια πηνίου <i>W</i>', '½ · L · i<sup>2</sup>', eng(0.5*L*i*i,'J')]
+  ]);
+  var msg;
+  if (pos === 1){
+    msg = If < 1e-9 ? 'Θέση 1, αλλά η τάση της πηγής είναι 0 V.' :
+      (k < 5 ? 'Θέση 1: το ρεύμα <b>αυξάνεται</b> &mdash; t = ' + eng(t,'s') + ' = ' + nf(k,2) + ' τ, i = <b>' + nf(100*i/If,1) + ' %</b> της τελικής τιμής'
+             : 'Θέση 1: t &gt; 5τ, η μεταβατική κατάσταση <b>τελείωσε</b> &mdash; i = U / R = <b>' + eng(If,'A') + '</b>, u<sub>L</sub> ≈ 0');
+  } else {
+    msg = i0 < 1e-9 ? 'Θέση 2: δεν κυκλοφορεί ρεύμα. Γύρισε τον διακόπτη στη θέση 1.' :
+      (k < 5 ? 'Θέση 2: το ρεύμα <b>μειώνεται</b> &mdash; t = ' + eng(t,'s') + ' = ' + nf(k,2) + ' τ, i = <b>' + nf(100*i/i0,1) + ' %</b> του αρχικού, η u<sub>L</sub> άλλαξε πολικότητα'
+             : 'Θέση 2: t &gt; 5τ, το ρεύμα <b>μηδενίστηκε</b> και η ενέργεια του πηνίου έγινε θερμότητα στην R');
+  }
+  $('status').innerHTML = msg + (paused ? ' &nbsp;<b>(παύση)</b>' : '');
+  $('bPos').textContent = pos === 1 ? 'S → θέση 2 (αποσύνδεση)' : 'S → θέση 1 (σύνδεση)';
+  $('bPos').classList.toggle('on', pos === 1);
+  drawChart();
+}
+drawChart = function(){
+  var C = PAL(), U = gv('sU'), R = gv('sR'), ta = tau(), Wt = 6*ta;
+  var imax = niceCeil(1.12 * Math.max(U/R, i0, 1e-3)), vmax = niceCeil(1.1 * Math.max(U, i0*R, 0.5));
+  var last = tr[tr.length-1], vm = [];
+  for (var k = 1; k <= 5; k++) vm.push({x:k*ta, label:(k === 1 ? '' : k) + 'τ'});
+  var hm = [];
+  if (pos === 1 && U/R > 1e-9) hm.push({y:0.632*U/R, label:'63 % του I', color:C.c[0]});
+  if (pos === 2 && i0 > 1e-9) hm.push({y:0.368*i0, label:'37 % του I₀', color:C.c[0]});
+  lineChart({xmin:0, xmax:Wt, ymin:0, ymax:imax, xs:1000, xlab:'Χρόνος t (ms)', ylab:'i (mA)', ys:1000, ylabColor:C.c[0],
+    y2:{ymin:-vmax, ymax:vmax, ylab:'u (V)'},
+    curves:[{pts:[[0,0],[Wt,0]].map(function(p){ return [p[0], 0]; }), color:C.c[5], w:1, ax:2},
+            {pts:tr.map(function(q){ return [q.t, q.uR]; }), color:C.c[1], ax:2, w:2.2},
+            {pts:tr.map(function(q){ return [q.t, q.uL]; }), color:C.c[2], ax:2, w:2.2},
+            {pts:tr.map(function(q){ return [q.t, q.i]; }), color:C.c[0], w:3}],
+    vmarks:vm, hmarks:hm,
+    cur:last && last.t <= Wt ? [{x:last.t, y:last.i, color:C.c[0]}, {x:last.t, y:last.uL, color:C.c[2], ax:2}] : null,
+    legend:[{name:'i', color:C.c[0]},{name:'uR', color:C.c[1]},{name:'uL', color:C.c[2]}], legendRow:true});
+};
+/* χρονική εξέλιξη: 6τ διαρκούν περίπου 4 s (αργή κίνηση) */
+var lastT = performance.now();
+function frame(now){
+  var dt = Math.min(0.1, (now - lastT) / 1000); lastT = now;
+  if (!paused){
+    var ta = tau(), If = Ifin(), Wt = 6*ta, ds = dt * Wt / 4, steps = 4;
+    for (var n = 0; n < steps; n++){ var h = ds/steps; i = If + (i - If) * Math.exp(-h/ta); t += h; if (t <= Wt) tr.push(sample()); }
+    update();
+  }
+  requestAnimationFrame(frame);
+}
+build();
+['sU','sR','sL'].forEach(function(id){
+  slider(id, id === 'sU' ? function(x){ return eng(x,'V'); } : id === 'sR' ? ohm : function(x){ return nf(x,1) + ' H'; }, function(){ newEvent(); update(); });
+});
+$('bPos').addEventListener('click', toggle);
+$('bPause').addEventListener('click', function(){ paused = !paused; this.textContent = paused ? '▶ Συνέχεια' : '⏸ Παύση'; this.classList.toggle('on', paused); update(); });
+$('bReset').addEventListener('click', function(){ pos = 2; i = 0; newEvent(); update(); });
+document.addEventListener('keydown', function(e){
+  if (e.target && e.target.tagName === 'INPUT') return;
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  var k = (e.key || '').toUpperCase(); if (k === 'S' || k === 'Σ') toggle();
+});
+newEvent();
+onTheme = update;
+initTheme(); update(); resizeChart();
+requestAnimationFrame(frame);
+
+})();
+</script>
+</body>
+</html>
