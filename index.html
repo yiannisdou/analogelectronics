@@ -23,6 +23,8 @@ button:hover{border-color:var(--hov)}
 .card h2{font-size:24px;margin:0 0 10px}
 .card .main{font-size:19px;line-height:1.35;margin-bottom:8px}
 .card .small{font-size:17px;color:var(--muted);line-height:1.4}
+h2.sec{font-size:26px;margin:38px 0 6px}
+.secsub{color:var(--muted);font-size:18px;line-height:1.5;margin-bottom:18px}
 </style>
 </head>
 <body>
@@ -39,6 +41,76 @@ button:hover{border-color:var(--hov)}
       <h2>🛠 idou circuits <span style="font-size:.68em;font-weight:normal;white-space:nowrap">(analog)</span></h2>
       <div class="main">Φτιάξε το δικό σου κύκλωμα</div>
       <div class="small">Πηγή · αντιστάσεις · LED · βολτόμετρο · αμπερόμετρο</div>
+    </a>
+  </div>
+
+  <h2 class="sec">Ηλεκτροτεχνία</h2>
+  <div class="secsub">Προσομοιώσεις για τους βασικούς νόμους των ηλεκτρικών κυκλωμάτων, με όργανα μέτρησης, ροή ρεύματος, πίνακα υπολογισμών και γραφήματα.</div>
+  <div class="grid">
+    <a class="card" data-sim href="ohm_law.html">
+      <h2>Νόμος του Ohm</h2>
+      <div class="main">I = U / R</div>
+      <div class="small">Αμπερόμετρο · βολτόμετρο · χαρακτηριστική</div>
+    </a>
+    <a class="card" data-sim href="resistors_series.html">
+      <h2>Αντιστάσεις σε σειρά</h2>
+      <div class="main">R<sub>ολ</sub> = R<sub>1</sub> + R<sub>2</sub> + R<sub>3</sub></div>
+      <div class="small">Ίδιο ρεύμα · μοίρασμα της τάσης</div>
+    </a>
+    <a class="card" data-sim href="resistors_parallel.html">
+      <h2>Αντιστάσεις παράλληλα</h2>
+      <div class="main">1/R<sub>ολ</sub> = 1/R<sub>1</sub> + 1/R<sub>2</sub> + 1/R<sub>3</sub></div>
+      <div class="small">Ίδια τάση · μοίρασμα του ρεύματος</div>
+    </a>
+    <a class="card" data-sim href="resistors_mixed.html">
+      <h2>Μεικτή συνδεσμολογία</h2>
+      <div class="main">R<sub>ολ</sub> = R<sub>1</sub> + R<sub>2</sub> ∥ R<sub>3</sub></div>
+      <div class="small">Επίλυση βήμα βήμα</div>
+    </a>
+    <a class="card" data-sim href="kirchhoff_1.html">
+      <h2>1ος κανόνας Kirchhoff</h2>
+      <div class="main">Σ I<sub>εισ</sub> = Σ I<sub>εξ</sub></div>
+      <div class="small">Κανόνας των κόμβων</div>
+    </a>
+    <a class="card" data-sim href="kirchhoff_2.html">
+      <h2>2ος κανόνας Kirchhoff</h2>
+      <div class="main">Σ E = Σ I·R</div>
+      <div class="small">Κανόνας των βρόχων</div>
+    </a>
+    <a class="card" data-sim href="sources_series.html">
+      <h2>Πηγές σε σειρά</h2>
+      <div class="main">E<sub>ολ</sub> = n·E, r<sub>ολ</sub> = n·r</div>
+      <div class="small">Μεγαλύτερη τάση · ανάποδη σύνδεση</div>
+    </a>
+    <a class="card" data-sim href="sources_parallel.html">
+      <h2>Πηγές παράλληλα</h2>
+      <div class="main">E<sub>ολ</sub> = E, r<sub>ολ</sub> = r / m</div>
+      <div class="small">Μεγαλύτερο ρεύμα · μικρότερη r</div>
+    </a>
+    <a class="card" data-sim href="sources_mixed.html">
+      <h2>Μεικτή σύνδεση πηγών</h2>
+      <div class="main">E<sub>ολ</sub> = n·E, r<sub>ολ</sub> = n·r / m</div>
+      <div class="small">Κλάδοι σε σειρά, συνδεδεμένοι παράλληλα</div>
+    </a>
+    <a class="card" data-sim href="rheostat.html">
+      <h2>Ροοστάτης</h2>
+      <div class="main">I = U / (R<sub>Λ</sub> + R<sub>ρ</sub>)</div>
+      <div class="small">Ρύθμιση ρεύματος · λαμπτήρας</div>
+    </a>
+    <a class="card" data-sim href="potentiometer.html">
+      <h2>Ποτενσιόμετρο</h2>
+      <div class="main">U<sub>εξ</sub> = U · R<sub>κάτω</sub> / P</div>
+      <div class="small">Διαιρέτης τάσης · επίδραση φορτίου</div>
+    </a>
+    <a class="card" data-sim href="electric_power.html">
+      <h2>Ηλεκτρική ισχύς</h2>
+      <div class="main">P = U·I = I<sup>2</sup>·R = U<sup>2</sup>/R</div>
+      <div class="small">Ενέργεια W = P·t</div>
+    </a>
+    <a class="card" data-sim href="efficiency.html">
+      <h2>Βαθμός απόδοσης</h2>
+      <div class="main">η = P<sub>ωφ</sub> / P<sub>ολ</sub></div>
+      <div class="small">Πραγματική πηγή · μέγιστη ισχύς για R = r</div>
     </a>
   </div>
 </div>
