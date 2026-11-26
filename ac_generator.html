@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Προσομοίωση: Παραγωγή ημιτονικής εναλλασσόμενης τάσης</title>
+<style>
+  :root{
+    --bg:#f4f6f9; --card:#ffffff; --ink:#1d2433; --muted:#5b6475;
+    --line:#d5dbe5; --hi:#e8411f; --accent:#0f7b6c; --th:#eef2f7; --act:#fff3c4;
+    --lcd:#14261a; --lcdt:#7dff9e; --flowc:#1e7bff;
+    --sl:#0f7b6c; --trk:#d5dbe5; --trkb:#b3bdcc; --thumb:#ffffff;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{font-family:Calibri,Carlito,"Segoe UI",Arial,sans-serif;background:var(--bg);color:var(--ink)}
+  .wrap{max-width:960px;margin:0 auto;padding:20px 16px 32px}
+  h1{font-size:1.6rem;margin:0 0 4px}
+  .sub{color:var(--muted);margin:0 0 18px;font-size:1rem;line-height:1.4}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:16px}
+  h2{font-size:1.15rem;margin:0 0 10px}
+  .svgbox{position:relative;width:100%}
+  #sv{width:100%;height:auto;display:block;user-select:none;-webkit-user-select:none}
+  .head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+  #btnTheme{white-space:nowrap}
+  .back{display:inline-block;margin:0 0 10px;color:var(--muted);text-decoration:none;font-size:1rem}
+  .back:hover{color:var(--ink);text-decoration:underline}
+  body.embedded .back{display:none}
+  button{font:inherit;font-size:1rem;padding:7px 14px;border-radius:8px;border:1px solid var(--line);background:#fff;color:var(--ink);cursor:pointer}
+  button:hover{background:#f0f3f8}
+  button.on{background:#e7f4f1;border-color:var(--accent)}
+  .controls{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;align-items:center;margin-top:8px}
+  .chk{display:inline-flex;align-items:center;gap:6px;font-size:1rem;color:var(--muted);cursor:pointer;user-select:none}
+  .ctrls{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:6px 22px;margin-top:8px}
+  .ctl{display:flex;align-items:center;gap:8px;font-size:1rem}
+  .ctl label{min-width:6.6em;font-weight:700;white-space:nowrap}
+  .ctl input[type=range]{flex:1;min-width:80px;cursor:pointer;-webkit-appearance:none;appearance:none;height:24px;margin:0;background:transparent;--p:50%}
+  .ctl input[type=range]:focus{outline:none}
+  .ctl input[type=range]::-webkit-slider-runnable-track{height:8px;border-radius:5px;border:1px solid var(--trkb);
+     background:linear-gradient(to right,var(--sl) 0,var(--sl) var(--p),var(--trk) var(--p),var(--trk) 100%)}
+  .ctl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:20px;height:20px;margin-top:-7px;border-radius:50%;
+     background:var(--thumb);border:3px solid var(--sl);box-shadow:0 1px 3px rgba(0,0,0,.35)}
+  .ctl input[type=range]::-moz-range-track{height:8px;border-radius:5px;border:1px solid var(--trkb);background:var(--trk)}
+  .ctl input[type=range]::-moz-range-progress{height:8px;border-radius:5px;background:var(--sl)}
+  .ctl input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--thumb);border:3px solid var(--sl);box-shadow:0 1px 3px rgba(0,0,0,.35)}
+  .ctl input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 4px rgba(15,123,108,.3)}
+  .ctl input[type=range]:focus-visible::-moz-range-thumb{box-shadow:0 0 0 4px rgba(15,123,108,.3)}
+  .ctl output{min-width:4.6em;text-align:right;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .seg{display:inline-flex}
+  .seg button{border-radius:0;padding:5px 12px}
+  .seg button:first-child{border-radius:8px 0 0 8px}
+  .seg button:last-child{border-radius:0 8px 8px 0}
+  .seg button+button{border-left:none}
+  .seg button.sel{background:#1d2433;color:#fff;border-color:#1d2433}
+  .seglbl{font-weight:700;margin-right:6px}
+  .status{text-align:center;font-size:1.12rem;margin:8px 0 0;line-height:1.35}
+  .status b{color:var(--hi)}
+  table{border-collapse:collapse;width:100%;font-size:1.02rem}
+  th,td{border:1px solid var(--line);padding:5px 8px}
+  th{background:var(--th);text-align:left}
+  td.f{color:var(--muted)}
+  td.v{text-align:right;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+  tr.key td{background:var(--act)}
+  .eq{font-size:1.25rem;text-align:center;margin:0 0 10px}
+  .eq b{color:var(--hi)}
+  .note{color:var(--muted);font-size:.97rem;line-height:1.45;margin:0 0 8px}
+  .note b{color:var(--ink)}
+  canvas{width:100%;height:230px;display:block;border:1px solid var(--line);border-radius:8px;background:#fcfdfe}
+  .legend{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:8px}
+  .legend h2{margin:0}
+  .legend .controls{margin:0}
+  .legend button{padding:5px 10px;font-size:.92rem}
+  details.how summary{cursor:pointer;font-weight:700;font-size:1.1rem}
+  details.how[open] summary{margin-bottom:8px}
+  .pbar{display:flex;height:16px;border-radius:5px;overflow:hidden;border:1px solid var(--line);min-width:120px}
+  .pbar span{display:block;height:100%}
+  kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 5px;background:#fff;font-size:.9em}
+
+  /* ---------- SVG ---------- */
+  .wire{fill:none;stroke-width:5;stroke-linejoin:round;stroke-linecap:round;transition:stroke .15s}
+  .flow{fill:none;stroke:var(--flowc);stroke-width:7;stroke-linecap:round;stroke-linejoin:round;
+        stroke-dasharray:0.1 18;animation:flow linear infinite;pointer-events:none}
+  .flow.off{display:none}
+  .noflow .flow{display:none}
+  @keyframes flow{to{stroke-dashoffset:-18.1}}
+  .comp{fill:none;stroke:var(--ink);stroke-width:3;stroke-linejoin:round;stroke-linecap:round}
+  .mask{fill:var(--card)}
+  .plate{stroke:var(--ink);stroke-width:3;stroke-linecap:butt}
+  .plate.thick{stroke-width:7}
+  .lbl{font-size:19px;fill:var(--ink)}
+  .lbl.b{font-weight:700}
+  .lbl.m{fill:var(--muted)}
+  .sm{font-size:15px;fill:var(--muted)}
+  .big{font-size:30px;font-weight:700;fill:var(--ink)}
+  .plus{font-size:22px;font-weight:700;fill:#e8411f;text-anchor:middle;dominant-baseline:central}
+  .minus{font-size:24px;font-weight:700;fill:var(--ink);text-anchor:middle;dominant-baseline:central}
+  .meter{fill:var(--card);stroke:var(--ink);stroke-width:3}
+  .mlet{font-size:22px;font-weight:700;fill:var(--ink);text-anchor:middle;dominant-baseline:central;pointer-events:none}
+  .lcd{fill:var(--lcd);stroke:var(--ink);stroke-width:1.2}
+  .lcdt{fill:var(--lcdt);font-size:17px;font-weight:700;text-anchor:middle;dominant-baseline:central;font-family:Consolas,"DejaVu Sans Mono",monospace}
+  .jdot{fill:var(--ink)}
+  .knode{fill:var(--accent);stroke:var(--card);stroke-width:2}
+  .dbox{fill:none;stroke:var(--muted);stroke-width:1.6;stroke-dasharray:7 5}
+  .iarr{fill:var(--flowc)}
+  .wa{fill:var(--ink)}
+  .term{fill:var(--card);stroke:var(--ink);stroke-width:2.5}
+  .lever{stroke:#e8411f;stroke-width:5;stroke-linecap:round}
+  .sw{cursor:pointer}
+  .sw:focus{outline:none}
+  .hit{fill:transparent;stroke:none}
+  .sw:hover .hit{fill:rgba(15,123,108,.07)}
+  .sw:focus-visible .hit{stroke:var(--accent);stroke-width:2;stroke-dasharray:4 3}
+  .drag{cursor:grab}
+  .drag:active{cursor:grabbing}
+  .lampx{stroke:var(--ink);stroke-width:2.5}
+  .vtag{font-size:18px;font-weight:700}
+  .loop{fill:none;stroke:var(--muted);stroke-width:2.2}
+
+  /* ---------- Σκούρο θέμα ---------- */
+  body.dark{--bg:#0d1219;--card:#161e2b;--ink:#e6ebf2;--muted:#9aa6b8;--line:#2c3a4f;--th:#202c3f;--act:#4a3b10;--lcd:#0b140e;--flowc:#3d9bff;--sl:#2fc4a8;--trk:#4a5a74;--trkb:#7083a3;--thumb:#e6ebf2}
+  body.dark button{background:#202c3f;color:var(--ink)}
+  body.dark button:hover{background:#2a3a55}
+  body.dark button.on{background:#123a33;border-color:#2fc4a8}
+  body.dark .seg button.sel{background:#3d9bff;color:#0b1018;border-color:#3d9bff;font-weight:700}
+  body.dark tr.key td{color:#ffe08a}
+  body.dark kbd{background:#202c3f}
+  body.dark canvas{background:#101824}
+  body.dark .sw:hover .hit{fill:rgba(47,196,168,.1)}
+
+  @media (min-width:1000px){
+    html,body{height:100%}
+    .wrap{max-width:1880px;height:100vh;display:flex;flex-direction:column;padding:10px 18px 10px}
+    h1{font-size:1.4rem}
+    .back{margin:0 0 4px;font-size:.95rem}
+    .sub{margin:0 0 8px;font-size:.95rem}
+    .layout{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1.4fr) minmax(360px,1fr);gap:14px;margin-bottom:10px}
+    .colL,.colR{display:flex;flex-direction:column;min-height:0;min-width:0}
+    .card{padding:12px 14px}
+    #circuitCard{flex:1;min-height:0;margin:0;display:flex;flex-direction:column}
+    .svgbox{flex:1;min-height:120px;aspect-ratio:auto!important}
+    #sv{position:absolute;left:0;top:0;width:100%;height:100%}
+    .colR>.card{margin-bottom:12px}
+    .colR>.card:last-child{flex:1;margin-bottom:0;display:flex;flex-direction:column;min-height:0}
+    #chart{flex:1 1 0;height:0;min-height:90px}
+    details.how{margin:0;flex:0 0 auto}
+    .eq{margin:0 0 6px;font-size:1.15rem}
+    th,td{padding:4px 7px}
+    .status{margin-top:6px}
+  }
+  @media (min-width:1000px) and (max-height:760px){
+    th,td{padding:2px 6px;font-size:.95rem}
+    .card{padding:9px 12px}
+    .colR>.card{margin-bottom:9px}
+    .ctrls{gap:3px 20px;margin-top:4px}
+    .controls{margin-top:4px}
+    .status{font-size:1.02rem;margin-top:3px}
+    .sub{margin-bottom:5px}
+    h2{margin-bottom:5px;font-size:1.05rem}
+    .legend{margin-bottom:5px}
+  }
+
+  .mag{stroke:var(--ink);stroke-width:2}
+  .magt{font-size:30px;font-weight:700;fill:#fff;text-anchor:middle;dominant-baseline:central}
+  .bl{stroke:var(--muted);stroke-width:1.6;stroke-dasharray:6 6;opacity:.7}
+  .bla{fill:var(--muted);opacity:.8}
+  .loopF{fill:none;stroke:#d9822b;stroke-width:6;stroke-linejoin:round;stroke-linecap:round}
+  .loopB{fill:none;stroke:#d9822b;stroke-width:3.5;opacity:.55;stroke-linejoin:round}
+  .loopS{fill:rgba(217,130,43,.12);stroke:none}
+  .shaft{stroke:#8a94a6;stroke-width:9;stroke-linecap:round}
+  .ring{fill:#e6b422;stroke:#8a6d00;stroke-width:2}
+  .brush{fill:#3a3f4a;stroke:var(--ink);stroke-width:1}
+  .cond{fill:#d9822b;stroke:var(--ink);stroke-width:2}
+  .csym{stroke:#fff;stroke-width:2.5;fill:none}
+  .csymd{fill:#fff}
+  .vel{stroke:#0f9d58;stroke-width:3;fill:none}
+  body.dark .vel{stroke:#2fd07a}
+  .orbit{fill:none;stroke:var(--muted);stroke-width:1.5;stroke-dasharray:4 5}
+  .gauge{fill:var(--card);stroke:var(--ink);stroke-width:3}
+  .tick{stroke:var(--ink);stroke-width:1.5}
+  .needle{stroke:#e8411f;stroke-width:3;stroke-linecap:round}
+  .vtag{fill:var(--flowc)}
+  .ac{fill:var(--card);stroke:var(--line);stroke-width:1.5}
+
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a id="backLink" class="back" href="index.html">← Όλες οι προσομοιώσεις</a>
+  <div class="head">
+    <h1>Παραγωγή ημιτονικής εναλλασσόμενης τάσης (γεννήτρια AC)</h1>
+    <button type="button" id="btnTheme" aria-pressed="false">🌙 Σκούρο θέμα</button>
+  </div>
+  <p class="sub">Το πλαίσιο (<b>δρομέας</b>) περιστρέφεται με σταθερή γωνιακή ταχύτητα <b>ω</b> μέσα στο μαγνητικό πεδίο <b>B</b> του μαγνήτη (<b>στάτης</b>). Παρατήρησε πότε η ΗΕΔ γίνεται μέγιστη και πότε μηδενίζεται. Πλήκτρο <kbd>Space</kbd>: παύση.</p>
+
+  <div class="layout">
+    <div class="colL">
+      <div class="card" id="circuitCard">
+        <div class="svgbox" style="aspect-ratio:900 / 492">
+          <svg id="sv" viewBox="0 14 900 492" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Γεννήτρια εναλλασσόμενου ρεύματος: πλαίσιο που περιστρέφεται ανάμεσα στους πόλους N και S, δακτύλιοι, ψήκτρες, φορτίο R και αμπερόμετρο"></svg>
+        </div>
+        <div class="ctrls">
+          <div class="ctl"><label for="sF">Συχνότητα f</label><input type="range" id="sF" min="0.1" max="1" step="0.05" value="0.25"><output for="sF"></output></div>
+          <div class="ctl"><label for="sN">Σπείρες N</label><input type="range" id="sN" min="10" max="200" step="10" value="100"><output for="sN"></output></div>
+          <div class="ctl"><label for="sB">Πεδίο B</label><input type="range" id="sB" min="0.1" max="1" step="0.1" value="0.5"><output for="sB"></output></div>
+          <div class="ctl"><label for="sR">Φορτίο R</label><input type="range" id="sR" min="10" max="200" step="10" value="50"><output for="sR"></output></div>
+        </div>
+        <div class="controls">
+          <button type="button" id="bPlay" class="on" style="min-width:7.5em">⏸ Παύση</button><button type="button" id="bStep">↻ +15°</button><button type="button" id="bZero">θ = 0°</button>
+          <label class="chk"><input type="checkbox" id="showFlow" checked> Εμφάνιση ροής ρεύματος</label>
+        </div>
+        <p class="status" id="status"></p>
+      </div>
+    </div>
+    <div class="colR">
+      <div class="card">
+        <h2>Μετρήσεις και υπολογισμοί</h2>
+        <div class="eq" id="eq">e = E<sub>0</sub> · ημωt &nbsp;&nbsp; E<sub>0</sub> = N · B · A · ω &nbsp;&nbsp; i = e / R = I<sub>0</sub> · ημωt</div>
+        <table id="meas"></table>
+      </div>
+      <div class="card">
+        <div class="legend">
+          <h2>ΗΕΔ e = E<sub>0</sub>·ημωt και ροή Φ = Φ<sub>0</sub>·συνωt</h2>
+          <div class="controls"></div>
+        </div>
+        <canvas id="chart" aria-label="ΗΕΔ e = E<sub>0</sub>·ημωt και ροή Φ = Φ<sub>0</sub>·συνωt"></canvas>
+      </div>
+    </div>
+  </div>
+  <details class="card how">
+    <summary>Πώς λειτουργεί</summary>
+    <p class="note">Η <b>γεννήτρια εναλλασσόμενου ρεύματος</b> έχει ένα ακίνητο μέρος, τον <b>στάτη</b> (εδώ ο μαγνήτης N–S που δημιουργεί το μαγνητικό πεδίο B), και ένα περιστρεφόμενο, τον <b>δρομέα</b> (το πλαίσιο με N σπείρες). Τα άκρα του πλαισίου συνδέονται σε δύο <b>δακτυλίους</b> πάνω στον άξονα, όπου ακουμπούν οι <b>ψήκτρες</b> που οδηγούν το ρεύμα στο φορτίο R.</p>
+    <p class="note">Καθώς το πλαίσιο περιστρέφεται, η <b>μαγνητική ροή Φ</b> που το διαπερνά <b>μεταβάλλεται</b>: Φ = Φ<sub>0</sub> · συνωt. Η μεταβολή της ροής προκαλεί <b>ΗΕΔ από επαγωγή</b> στα άκρα του πλαισίου. Η ΗΕΔ είναι ημιτονική, <b>e = E<sub>0</sub> · ημωt</b>, με μέγιστη τιμή <b>E<sub>0</sub> = N · B · A · ω</b>, ανάλογη της γωνιακής ταχύτητας.</p>
+    <p class="note">Όταν το πλαίσιο είναι <b>κάθετο</b> στις δυναμικές γραμμές (θ = 0°, 180°), η ροή είναι μέγιστη αλλά τη στιγμή εκείνη δεν αλλάζει, άρα <b>e = 0</b>. Όταν είναι <b>παράλληλο</b> (θ = 90°, 270°), η ροή είναι μηδέν αλλά αλλάζει πιο γρήγορα από κάθε άλλη στιγμή, άρα η ΗΕΔ είναι <b>μέγιστη</b>. Στην πλάγια όψη φαίνεται ότι τότε οι πλευρές a, b κινούνται κάθετα στις γραμμές του B.</p>
+    <p class="note">Με ωμικό φορτίο R, το ρεύμα είναι <b>i = e / R = I<sub>0</sub> · ημωt</b>, με I<sub>0</sub> = E<sub>0</sub> / R. Κάθε μισή περίοδο <b>αλλάζει φορά</b>: η βελόνα του αμπερόμετρου πηγαίνει δεξιά και αριστερά και οι μπλε κουκκίδες αλλάζουν κατεύθυνση. Μία πλήρης περιστροφή αντιστοιχεί σε μία περίοδο <b>T = 1 / f</b> και <b>ω = 2πf</b>. Στο δίκτυο της ΔΕΗ f = 50 Hz. Εδώ η περιστροφή είναι πολύ αργή για να φαίνεται. Το εμβαδόν του πλαισίου είναι A = 100 cm² = 0,01 m².</p>
+  </details>
+</div>
+<script>
+/* ===== Κοινά εργαλεία των προσομοιώσεων ηλεκτροτεχνίας (Ι. Δούφλιας, άδεια MIT) ===== */
+var NS = 'http://www.w3.org/2000/svg', dark = false;
+function $(id){ return document.getElementById(id); }
+
+/* ---------- μορφοποίηση αριθμών (υποδιαστολή με κόμμα) ---------- */
+function eng(v, unit, dig){
+  dig = dig || 3;
+  if (v === null || v === undefined || !isFinite(v)) return '—';
+  var a = Math.abs(v); if (a < 1e-12) return '0 ' + unit;
+  var P = [[1e6,'M'],[1e3,'k'],[1,''],[1e-3,'m'],[1e-6,'µ']], s = P[P.length-1];
+  for (var i = 0; i < P.length; i++) if (a >= P[i][0] * 0.9995){ s = P[i]; break; }
+  var n = v / s[0], m = Math.abs(n);
+  var t = m >= 99.95 ? n.toFixed(Math.max(0, dig-3)) : m >= 9.995 ? n.toFixed(Math.max(0, dig-2)) : n.toFixed(Math.max(0, dig-1));
+  return t.replace('.', ',').replace('-', '−') + ' ' + s[1] + unit;
+}
+function nf(v, d){ if (Math.abs(v) < 0.5 * Math.pow(10, -d)) v = 0; return v.toFixed(d).replace('.', ',').replace('-', '−'); }
+function ohm(v){ return (v > 0 && v < 0.9995) ? nf(v, 3) + ' Ω' : eng(v, 'Ω'); }
+function ft(v){ var s = String(Number(v.toPrecision(6))); return s.replace('.', ',').replace('-', '−'); }
+
+/* ---------- SVG ---------- */
+var SV = $('sv'), LY = {}, REG = {};
+var DEFS =
+  '<radialGradient id="glow" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#ff5a2a" stop-opacity=".75"/><stop offset="60%" stop-color="#ff5a2a" stop-opacity=".2"/><stop offset="100%" stop-color="#ff5a2a" stop-opacity="0"/></radialGradient>' +
+  '<radialGradient id="lglow" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#ffd23a" stop-opacity=".95"/><stop offset="55%" stop-color="#ffd23a" stop-opacity=".3"/><stop offset="100%" stop-color="#ffd23a" stop-opacity="0"/></radialGradient>' +
+  '<marker id="wah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path class="wa" d="M0,0 L10,5 L0,10 z"/></marker>' +
+  '<marker id="lah" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path style="fill:var(--muted)" d="M0,0 L10,5 L0,10 z"/></marker>';
+function mk(tag, at, par, txt){
+  var e = document.createElementNS(NS, tag);
+  if (at) for (var k in at) if (at[k] !== undefined) e.setAttribute(k, at[k]);
+  (par || SV).appendChild(e);
+  if (txt !== undefined && txt !== null) e.textContent = txt;
+  return e;
+}
+function P(pts){ return pts.map(function(p){ return p[0] + ',' + p[1]; }).join(' '); }
+function clearSVG(){
+  SV.innerHTML = ''; REG = {};
+  var d = mk('defs', null, SV); d.innerHTML = DEFS;
+  LY.w = mk('g', null, SV); LY.f = mk('g', null, SV); LY.c = mk('g', null, SV); LY.t = mk('g', null, SV);
+}
+function reg(id, e){ if (id){ (REG[id] = REG[id] || []).push(e); } return e; }
+function R_(id){ return REG[id] || []; }
+
+/* αγωγοί: ένα id ανά κόμβο, το χρώμα δείχνει το δυναμικό */
+var VMIN = 0, VMAX = 12;
+function vColor(v){
+  var t = Math.max(0, Math.min(1, (v - VMIN) / ((VMAX - VMIN) || 1)));
+  var c0 = [138,148,166], c1 = [232,65,31];
+  return 'rgb(' + Math.round(c0[0]+(c1[0]-c0[0])*t) + ',' + Math.round(c0[1]+(c1[1]-c0[1])*t) + ',' + Math.round(c0[2]+(c1[2]-c0[2])*t) + ')';
+}
+function W(id, pts){ return reg(id, mk('polyline', {'class':'wire', points:P(pts), stroke:vColor(0)}, LY.w)); }
+function setV(id, v){ R_(id).forEach(function(e){ e.setAttribute('stroke', vColor(v)); }); }
+function setPts(id, pts){ R_(id).forEach(function(e){ e.setAttribute('points', P(pts)); }); }
+function dot(x, y){ return mk('circle', {cx:x, cy:y, r:5.5, 'class':'jdot'}, LY.c); }
+
+/* ροή ρεύματος: μπλε κουκκίδες στη συμβατική φορά, ταχύτητα ανάλογη του ρεύματος */
+function F(id, pts){ return reg(id, mk('polyline', {'class':'flow off', points:P(pts)}, LY.f)); }
+function setI(id, I, Iref){
+  R_(id).forEach(function(e){
+    var a = Math.abs(I);
+    if (a < 1e-7){ e.classList.add('off'); return; }
+    e.classList.remove('off');
+    var t = Math.min(1, a / (Iref || 1));
+    e.style.animationDuration = (1.9 / (0.3 + 2.4 * t)).toFixed(2) + 's';
+    e.style.animationDirection = I < 0 ? 'reverse' : 'normal';
+  });
+}
+
+/* κείμενα */
+function T(x, y, s, cls, at){
+  at = at || {}; var id = at.id; delete at.id;
+  at.x = x; at.y = y; at['class'] = cls || 'lbl';
+  return reg(id, mk('text', at, LY.t, s));
+}
+function setT(id, s){ R_(id).forEach(function(e){ e.textContent = s; }); }
+function labels(cx, cy, dir, o, ext){
+  var s = o.side || (dir === 'v' ? 'right' : 'top'), x, y1, y2, anc;
+  if (s === 'top'){ x = cx; y1 = cy - ext - 28; y2 = cy - ext - 7; anc = 'middle'; }
+  else if (s === 'bottom'){ x = cx; y1 = cy + ext + 21; y2 = cy + ext + 42; anc = 'middle'; }
+  else if (s === 'right'){ x = cx + ext + 8; y1 = cy - 5; y2 = cy + 17; anc = 'start'; }
+  else { x = cx - ext - 8; y1 = cy - 5; y2 = cy + 17; anc = 'end'; }
+  if (o.name) T(x, y1, o.name, 'lbl b', {'text-anchor':anc});
+  if (o.val) T(x, y2, o.txt || '', 'lbl', {'text-anchor':anc, id:o.val});
+}
+
+/* αντίσταση: μήκος 60, ακροδέκτες στα ±30 */
+function Rz(cx, cy, dir, o){
+  o = o || {}; var g = mk('g', null, LY.c), v = dir === 'v', pts = [[-30,0]];
+  for (var i = 0; i < 6; i++) pts.push([-25 + i*10, i % 2 ? -11 : 11]);
+  pts.push([30, 0]);
+  if (o.halo) reg(o.halo, mk('circle', {cx:cx, cy:cy, r:0, fill:'url(#glow)'}, g));
+  mk('rect', v ? {x:cx-15, y:cy-31, width:30, height:62, 'class':'mask'} : {x:cx-31, y:cy-15, width:62, height:30, 'class':'mask'}, g);
+  mk('polyline', {'class':'comp', points:P(pts.map(function(p){ return v ? [cx+p[1], cy+p[0]] : [cx+p[0], cy+p[1]]; }))}, g);
+  labels(cx, cy, dir, o, 14);
+}
+/* μεταβλητή αντίσταση (ροοστάτης, ποτενσιόμετρο): από a έως b στον άξονα */
+function Rlong(a, b, c, dir, teeth){
+  var g = mk('g', null, LY.c), v = dir === 'v', L = b - a, n = teeth, st = L / n, pts = [[a, 0]];
+  for (var i = 0; i < n; i++) pts.push([a + st/2 + i*st, i % 2 ? -11 : 11]);
+  pts.push([b, 0]);
+  mk('rect', v ? {x:c-15, y:a-1, width:30, height:L+2, 'class':'mask'} : {x:a-1, y:c-15, width:L+2, height:30, 'class':'mask'}, g);
+  mk('polyline', {'class':'comp', points:P(pts.map(function(p){ return v ? [c+p[1], p[0]] : [p[0], c+p[1]]; }))}, g);
+  return g;
+}
+/* στοιχείο (πηγή): s = −1 → ο θετικός πόλος (μακριά πλάκα) προς τα αριστερά / πάνω, s = +1 → δεξιά / κάτω.
+   ακροδέκτες στα ±5 πάνω στον άξονα */
+function Cell(cx, cy, dir, s, o){
+  o = o || {}; var g = mk('g', null, LY.c), v = dir === 'v';
+  function L(a, len){ return v ? {x1:cx-len, y1:cy+a, x2:cx+len, y2:cy+a} : {x1:cx+a, y1:cy-len, x2:cx+a, y2:cy+len}; }
+  mk('rect', v ? {x:cx-24, y:cy-4, width:48, height:8, 'class':'mask'} : {x:cx-4, y:cy-24, width:8, height:48, 'class':'mask'}, g);
+  var a1 = L(5*s, o.small ? 16 : 20); a1['class'] = 'plate'; mk('line', a1, g);
+  var a2 = L(-5*s, o.small ? 8 : 10); a2['class'] = 'plate thick'; mk('line', a2, g);
+  if (!o.noplus){
+    var side = o.side || (v ? 'left' : 'top');
+    if (v) mk('text', {x: side === 'right' ? cx-32 : cx+32, y: cy + 5*s + 9*s, 'class':'plus'}, g, '+');
+    else mk('text', {x: cx + 5*s + 10*s, y: side === 'top' ? cy+32 : cy-30, 'class':'plus'}, g, '+');
+  }
+  if (o.name || o.val) labels(cx, cy, dir, o, v ? 22 : 22);
+  return g;
+}
+/* πηνίο κατακόρυφο: από y1 έως y1+80, 4 σπείρες προς τα δεξιά */
+function Coil(cx, y1, o){
+  o = o || {}; var g = mk('g', null, LY.c);
+  mk('rect', {x:cx-4, y:y1-1, width:24, height:82, 'class':'mask'}, g);
+  mk('path', {d:'M' + cx + ',' + y1 + ' a10,10 0 0 1 0,20 a10,10 0 0 1 0,20 a10,10 0 0 1 0,20 a10,10 0 0 1 0,20', 'class':'comp'}, g);
+  labels(cx, y1 + 40, 'v', o, 10);
+}
+/* πυκνωτής: κατακόρυφος (οπλισμοί στα cy±8) ή οριζόντιος (dir 'h', οπλισμοί στα cx±8) */
+function Cap(cx, cy, o, dir){
+  o = o || {}; var g = mk('g', null, LY.c), id = o.id || 'cap', h = dir === 'h';
+  if (h){
+    mk('rect', {x:cx-7, y:cy-30, width:14, height:60, 'class':'mask'}, g);
+    reg(id + 'T', mk('line', {x1:cx-8, y1:cy-28, x2:cx-8, y2:cy+28, 'class':'plate'}, g));
+    reg(id + 'B', mk('line', {x1:cx+8, y1:cy-28, x2:cx+8, y2:cy+28, 'class':'plate'}, g));
+    labels(cx, cy, 'h', o, 30);
+  } else {
+    mk('rect', {x:cx-30, y:cy-7, width:60, height:14, 'class':'mask'}, g);
+    reg(id + 'T', mk('line', {x1:cx-28, y1:cy-8, x2:cx+28, y2:cy-8, 'class':'plate'}, g));
+    reg(id + 'B', mk('line', {x1:cx-28, y1:cy+8, x2:cx+28, y2:cy+8, 'class':'plate'}, g));
+    labels(cx, cy, 'v', o, 30);
+  }
+}
+/* χρώμα οπλισμών ανάλογα με το φορτίο (f από 0 έως 1) */
+function capCharge(id, f){
+  f = Math.max(0, Math.min(1, f));
+  var t = R_(id + 'T')[0], b = R_(id + 'B')[0]; if (!t) return;
+  t.style.stroke = f > 0.01 ? mixHex(dark ? '#e6ebf2' : '#1d2433', '#e8411f', f) : '';
+  b.style.stroke = f > 0.01 ? mixHex(dark ? '#e6ebf2' : '#1d2433', dark ? '#3d9bff' : '#1e7bff', f) : '';
+  t.style.strokeWidth = b.style.strokeWidth = (3 + 3*f).toFixed(1);
+}
+/* όργανο μέτρησης: κύκλος r = 20 και οθόνη με την ένδειξη */
+function Meter(id, cx, cy, letter, lx, ly, w){
+  var g = mk('g', null, LY.c);
+  mk('circle', {cx:cx, cy:cy, r:20, 'class':'meter'}, g);
+  mk('text', {x:cx, y:cy+1, 'class':'mlet'}, g, letter);
+  w = w || 92;
+  var t = mk('g', null, LY.t);
+  mk('rect', {x:lx - w/2, y:ly - 13, width:w, height:26, rx:5, 'class':'lcd'}, t);
+  reg(id, mk('text', {x:lx, y:ly + 1, 'class':'lcdt'}, t, ''));
+}
+function setM(id, s){ setT(id, s); }
+/* λαμπτήρας */
+function Lamp(id, cx, cy){
+  var g = mk('g', null, LY.c);
+  reg(id + '_h', mk('circle', {cx:cx, cy:cy, r:0, fill:'url(#lglow)'}, g));
+  reg(id + '_b', mk('circle', {cx:cx, cy:cy, r:20, 'class':'meter'}, g));
+  mk('line', {x1:cx-14, y1:cy-14, x2:cx+14, y2:cy+14, 'class':'lampx'}, g);
+  mk('line', {x1:cx-14, y1:cy+14, x2:cx+14, y2:cy-14, 'class':'lampx'}, g);
+}
+function mixHex(a, b, t){
+  function h(c){ return [parseInt(c.substr(1,2),16), parseInt(c.substr(3,2),16), parseInt(c.substr(5,2),16)]; }
+  var x = h(a), y = h(b);
+  return 'rgb(' + Math.round(x[0]+(y[0]-x[0])*t) + ',' + Math.round(x[1]+(y[1]-x[1])*t) + ',' + Math.round(x[2]+(y[2]-x[2])*t) + ')';
+}
+function setLamp(id, b){
+  b = Math.max(0, Math.min(1, b));
+  R_(id + '_h').forEach(function(e){ e.setAttribute('r', b > 0.01 ? (24 + 46*b).toFixed(1) : 0); e.setAttribute('opacity', (0.35 + 0.65*b).toFixed(2)); });
+  R_(id + '_b').forEach(function(e){ e.style.fill = b > 0.01 ? mixHex(dark ? '#161e2b' : '#ffffff', '#ffd23a', 0.25 + 0.75*b) : ''; });
+}
+function setHalo(id, b){
+  b = Math.max(0, Math.min(1, b));
+  R_(id).forEach(function(e){ e.setAttribute('r', b > 0.01 ? (22 + 38*b).toFixed(1) : 0); e.setAttribute('opacity', (0.3 + 0.7*b).toFixed(2)); });
+}
+/* διακόπτης: οριζόντιος (x..x+50) ή κατακόρυφος (y..y+50) */
+function Sw(id, x, y, dir, label, cb){
+  var v = dir === 'v';
+  var g = mk('g', {'class':'sw', tabindex:0, role:'switch', 'aria-label':'Διακόπτης ' + label}, LY.c);
+  mk('rect', v ? {x:x-16, y:y-8, width:52, height:66, rx:8, 'class':'hit'} : {x:x-8, y:y-40, width:66, height:52, rx:8, 'class':'hit'}, g);
+  var lev = mk('line', {x1:x, y1:y, x2:v?x:x+50, y2:v?y+50:y, 'class':'lever'}, g);
+  mk('circle', {cx:x, cy:y, r:5, 'class':'term'}, g);
+  mk('circle', {cx:v?x:x+50, cy:v?y+50:y, r:5, 'class':'term'}, g);
+  if (v) mk('text', {x:x-14, y:y+32, 'class':'lbl b', 'text-anchor':'end'}, g, label);
+  else mk('text', {x:x+25, y:y+30, 'class':'lbl b', 'text-anchor':'middle'}, g, label);
+  g._lev = lev; g._v = v; g._x = x; g._y = y;
+  g.addEventListener('click', cb);
+  g.addEventListener('keydown', function(e){ if (e.key === ' ' || e.key === 'Enter'){ e.preventDefault(); cb(); } });
+  REG[id] = [g];
+}
+function setSw(id, on){
+  var g = R_(id)[0]; if (!g) return; var l = g._lev;
+  if (g._v){ l.setAttribute('x2', on ? g._x : g._x + 26); l.setAttribute('y2', on ? g._y + 50 : g._y + 43); }
+  else { l.setAttribute('x2', on ? g._x + 50 : g._x + 45); l.setAttribute('y2', on ? g._y : g._y - 25); }
+  g.setAttribute('aria-checked', on ? 'true' : 'false');
+}
+/* βελάκι φοράς ρεύματος */
+function Arr(id, x, y, d){
+  var p = {r:[[-8,-8],[8,0],[-8,8]], l:[[8,-8],[-8,0],[8,8]], u:[[-8,8],[0,-8],[8,8]], d:[[-8,-8],[0,8],[8,-8]]}[d];
+  return reg(id, mk('polygon', {'class':'iarr', points:P(p.map(function(q){ return [x+q[0], y+q[1]]; }))}, LY.t));
+}
+function show(id, on){ R_(id).forEach(function(e){ e.style.display = on ? '' : 'none'; }); }
+
+/* σύρσιμο με το ποντίκι/δάχτυλο: fn(σημείο στις συντεταγμένες του SVG) */
+function svgPt(e){ var p = SV.createSVGPoint(); p.x = e.clientX; p.y = e.clientY; return p.matrixTransform(SV.getScreenCTM().inverse()); }
+function makeDrag(el, fn){
+  var on = false;
+  el.addEventListener('pointerdown', function(e){ on = true; try { el.setPointerCapture(e.pointerId); } catch(x){} fn(svgPt(e)); e.preventDefault(); });
+  el.addEventListener('pointermove', function(e){ if (on) fn(svgPt(e)); });
+  el.addEventListener('pointerup', function(){ on = false; });
+  el.addEventListener('pointercancel', function(){ on = false; });
+}
+function setSlider(id, v){ var e = $(id); e.value = v; e.dispatchEvent(new Event('input')); }
+
+/* ---------- πίνακας μετρήσεων ---------- */
+function setMeas(rows){
+  var h = '<thead><tr><th>Μέγεθος</th><th>Σχέση</th><th style="text-align:right">Τιμή</th></tr></thead><tbody>';
+  rows.forEach(function(r){ h += '<tr' + (r[3] ? ' class="key"' : '') + '><td>' + r[0] + '</td><td class="f">' + (r[1] || '') + '</td><td class="v">' + r[2] + '</td></tr>'; });
+  $('meas').innerHTML = h + '</tbody>';
+}
+
+/* ---------- ρυθμιστικά ---------- */
+function slider(id, fmt, cb){
+  var e = $(id), o = e.parentNode.querySelector('output');
+  function f(){ o.textContent = fmt(+e.value); e.style.setProperty('--p', ((+e.value - +e.min) / ((+e.max - +e.min) || 1) * 100) + '%'); }
+  e.addEventListener('input', function(){ f(); cb(); });
+  f();
+}
+function gv(id){ return +$(id).value; }
+function segBtns(ids, cb){
+  ids.forEach(function(id){ $(id).addEventListener('click', function(){ ids.forEach(function(j){ $(j).classList.toggle('sel', j === id); }); cb(id); }); });
+}
+
+/* ---------- γραφήματα (canvas) ---------- */
+var CV = $('chart'), CX = CV.getContext('2d'), drawChart = function(){};
+function resizeChart(){
+  var d = window.devicePixelRatio || 1, w = CV.clientWidth, h = CV.clientHeight;
+  if (!w || !h) return;
+  CV.width = Math.round(w*d); CV.height = Math.round(h*d);
+  CX.setTransform(d, 0, 0, d, 0, 0);
+  drawChart();
+}
+window.addEventListener('resize', resizeChart);
+try { new ResizeObserver(resizeChart).observe(CV); } catch(e){}
+var FONT = 'Calibri, Carlito, "Segoe UI", Arial, sans-serif';
+function PAL(){
+  return dark ? {grid:'#253246', axis:'#4a5a72', txt:'#9aa6b8', ink:'#e6ebf2', bg:'#101824', c:['#5b9bff','#2fc4a8','#ff6a4a','#f0b429','#b98cff','#9aa6b8']}
+              : {grid:'#e6eaf0', axis:'#9aa6b8', txt:'#5b6475', ink:'#1d2433', bg:'#fcfdfe', c:['#2f6fd6','#0f7b6c','#e8411f','#b26a00','#7b3fbf','#8a94a6']};
+}
+function niceStep(range, n){
+  var r = range / Math.max(1, n), p = Math.pow(10, Math.floor(Math.log10(r))), m = r / p;
+  return (m < 1.5 ? 1 : m < 3 ? 2 : m < 7 ? 5 : 10) * p;
+}
+function niceCeil(v){ if (v <= 0) return 1; var s = niceStep(v, 5); return Math.ceil(v / s - 1e-9) * s; }
+function ln(x1, y1, x2, y2){ CX.beginPath(); CX.moveTo(x1, y1); CX.lineTo(x2, y2); CX.stroke(); }
+
+/* o: xmin,xmax,ymin,ymax,xlab,ylab,xs,ys (κλίμακα ετικετών), curves:[{f|pts,color,dash,w,ax}], rec:[{x,y}], cur:{x,y,color,ax},
+      y2:{ymin,ymax,ylab,ys}, legend:[{name,color,dash}] */
+function lineChart(o){
+  var w = CV.clientWidth, h = CV.clientHeight; if (!w || !h) return;
+  var C = PAL(); CX.clearRect(0, 0, w, h);
+  var l = 52, r = o.y2 ? 52 : 16, t = 24, b = 38, pw = w - l - r, ph = h - t - b;
+  if (pw < 40 || ph < 30) return;
+  function X(x){ return l + (x - o.xmin) / (o.xmax - o.xmin) * pw; }
+  function Y(y, ax){ ax = ax === 2 ? o.y2 : o; return t + ph - (y - ax.ymin) / (ax.ymax - ax.ymin) * ph; }
+  CX.font = '13px ' + FONT; CX.lineWidth = 1;
+  var sx = niceStep(o.xmax - o.xmin, Math.max(2, Math.floor(pw / 70))), sy = niceStep(o.ymax - o.ymin, Math.max(2, Math.floor(ph / 32)));
+  CX.strokeStyle = C.grid; CX.fillStyle = C.txt; CX.textAlign = 'center'; CX.textBaseline = 'top';
+  for (var x = Math.ceil(o.xmin / sx - 1e-9) * sx; x <= o.xmax + 1e-9; x += sx){ var px = X(x); ln(px, t, px, t + ph); CX.fillText(ft(x * (o.xs || 1)), px, t + ph + 4); }
+  CX.textAlign = 'right'; CX.textBaseline = 'middle';
+  for (var y = Math.ceil(o.ymin / sy - 1e-9) * sy; y <= o.ymax + 1e-9; y += sy){ var py = Y(y); ln(l, py, l + pw, py); CX.fillText(ft(y * (o.ys || 1)), l - 6, py); }
+  if (o.y2){
+    var a = o.y2, s2 = niceStep(a.ymax - a.ymin, Math.max(2, Math.floor(ph / 32)));
+    CX.textAlign = 'left';
+    for (var y2 = Math.ceil(a.ymin / s2 - 1e-9) * s2; y2 <= a.ymax + 1e-9; y2 += s2) CX.fillText(ft(y2 * (a.ys || 1)), l + pw + 6, Y(y2, 2));
+  }
+  CX.strokeStyle = C.axis; CX.lineWidth = 1.5; ln(l, t, l, t + ph); ln(l, t + ph, l + pw, t + ph); if (o.y2) ln(l + pw, t, l + pw, t + ph);
+  CX.font = 'bold 14px ' + FONT; CX.textBaseline = 'alphabetic';
+  CX.fillStyle = o.ylabColor || C.txt; CX.textAlign = 'left'; CX.fillText(o.ylab || '', 6, 15);
+  if (o.y2){ CX.fillStyle = o.y2.color || C.txt; CX.textAlign = 'right'; CX.fillText(o.y2.ylab || '', w - 6, 15); }
+  CX.fillStyle = C.txt;
+  if (o.legendRow){ CX.textAlign = 'right'; CX.fillText(o.xlab || '', l + pw, h - 4); }
+  else { CX.textAlign = 'center'; CX.fillText(o.xlab || '', l + pw/2, h - 4); }
+  CX.save(); CX.beginPath(); CX.rect(l, t - 2, pw, ph + 4); CX.clip();
+  (o.curves || []).forEach(function(c){
+    CX.strokeStyle = c.color; CX.lineWidth = c.w || 2.5; CX.setLineDash(c.dash || []); CX.beginPath();
+    var pts = c.pts;
+    if (!pts){ pts = []; for (var i = 0; i <= 240; i++){ var xx = o.xmin + (o.xmax - o.xmin) * i / 240; pts.push([xx, c.f(xx)]); } }
+    var started = false;
+    pts.forEach(function(p){ if (!isFinite(p[1])){ started = false; return; } var X1 = X(p[0]), Y1 = Y(p[1], c.ax); if (!started){ CX.moveTo(X1, Y1); started = true; } else CX.lineTo(X1, Y1); });
+    CX.stroke(); CX.setLineDash([]);
+  });
+  (o.rec || []).forEach(function(p){ CX.strokeStyle = p.color || C.ink; CX.fillStyle = C.bg; CX.lineWidth = 2; CX.beginPath(); CX.arc(X(p.x), Y(p.y, p.ax), 5, 0, 7); CX.fill(); CX.stroke(); });
+  CX.restore();
+  (o.vmarks || []).forEach(function(m){
+    var px = X(m.x); if (px < l || px > l + pw + 0.5) return;
+    CX.strokeStyle = C.axis; CX.lineWidth = 1; CX.setLineDash([3,4]); ln(px, t, px, t + ph); CX.setLineDash([]);
+    CX.fillStyle = C.txt; CX.font = 'bold 12px ' + FONT; CX.textAlign = 'center'; CX.textBaseline = 'bottom'; CX.fillText(m.label, px, t - 1);
+  });
+  (o.hmarks || []).forEach(function(m){
+    var py = Y(m.y, m.ax); if (py < t || py > t + ph) return;
+    CX.strokeStyle = m.color || C.axis; CX.lineWidth = 1; CX.setLineDash([2,4]); ln(l, py, l + pw, py); CX.setLineDash([]);
+    CX.fillStyle = m.color || C.txt; CX.font = '12px ' + FONT; CX.textAlign = 'left'; CX.textBaseline = 'bottom'; CX.fillText(m.label, l + 4, py - 1);
+  });
+  (o.cur ? [].concat(o.cur) : []).forEach(function(c){
+    var cx = X(c.x), cy = Y(c.y, c.ax);
+    if (cx < l - 1 || cx > l + pw + 1 || cy < t - 1 || cy > t + ph + 1) return;
+    CX.strokeStyle = c.color; CX.lineWidth = 1.2; CX.setLineDash([4, 4]);
+    if (c.ax === 2) ln(cx, cy, l + pw, cy); else ln(cx, cy, l, cy);
+    ln(cx, cy, cx, t + ph); CX.setLineDash([]);
+    CX.fillStyle = c.color; CX.beginPath(); CX.arc(cx, cy, 6.5, 0, 7); CX.fill();
+  });
+  if (o.legend && o.legendRow){
+    CX.font = 'bold 13px ' + FONT; CX.textBaseline = 'middle'; CX.textAlign = 'left';
+    var lx = 6, ly = h - 10;
+    o.legend.forEach(function(g){
+      CX.strokeStyle = g.color; CX.lineWidth = 3; CX.setLineDash(g.dash || []); ln(lx, ly, lx + 18, ly); CX.setLineDash([]);
+      CX.fillStyle = g.color; CX.fillText(g.name, lx + 23, ly); lx += 23 + CX.measureText(g.name).width + 16;
+    });
+  } else if (o.legend){
+    CX.font = 'bold 13px ' + FONT; CX.textBaseline = 'middle'; CX.textAlign = 'left';
+    var lw = 0; o.legend.forEach(function(g){ lw = Math.max(lw, CX.measureText(g.name).width); });
+    var bx = o.legendLeft ? l + 8 : l + pw - lw - 44, by = o.legendBottom ? t + ph - 8 - o.legend.length * 18 : t + 6;
+    CX.fillStyle = C.bg; CX.globalAlpha = .88; CX.fillRect(bx - 4, by - 2, lw + 40, o.legend.length * 18 + 4); CX.globalAlpha = 1;
+    o.legend.forEach(function(g, i){
+      var yy = by + 9 + i * 18;
+      CX.strokeStyle = g.color; CX.lineWidth = 2.5; CX.setLineDash(g.dash || []); ln(bx, yy, bx + 24, yy); CX.setLineDash([]);
+      CX.fillStyle = g.color; CX.fillText(g.name, bx + 30, yy);
+    });
+  }
+}
+/* ραβδόγραμμα σε τμήμα του canvas: o = {title, fmt, max, bars:[{label, segs:[{v,color,name}]}]} */
+function barPanel(o, rx, rw){
+  var h = CV.clientHeight, C = PAL();
+  var l = rx + 50, r = 10, t = 26, b = 40, pw = rw - 50 - r, ph = h - t - b;
+  if (pw < 40 || ph < 30) return;
+  var tot = o.bars.map(function(B){ return B.segs.reduce(function(s, q){ return s + Math.max(0, q.v); }, 0); });
+  var max = o.max || niceCeil(Math.max.apply(null, tot.concat([1e-9])) * 1.12);
+  function Y(v){ return t + ph - v / max * ph; }
+  CX.font = '13px ' + FONT; CX.lineWidth = 1; CX.strokeStyle = C.grid; CX.fillStyle = C.txt; CX.textAlign = 'right'; CX.textBaseline = 'middle';
+  var st = niceStep(max, Math.max(2, Math.floor(ph / 32)));
+  for (var v = 0; v <= max + 1e-12; v += st){ ln(l, Y(v), l + pw, Y(v)); CX.fillText(o.tick ? o.tick(v) : ft(v), l - 6, Y(v)); }
+  CX.strokeStyle = C.axis; CX.lineWidth = 1.5; ln(l, t, l, t + ph); ln(l, t + ph, l + pw, t + ph);
+  CX.font = 'bold 14px ' + FONT; CX.textAlign = 'left'; CX.textBaseline = 'alphabetic'; CX.fillStyle = C.txt; CX.fillText(o.title || '', rx + 6, 15);
+  var slot = pw / o.bars.length, bw = Math.min(70, slot * 0.6);
+  o.bars.forEach(function(B, i){
+    var cx = l + slot * (i + 0.5), y0 = t + ph;
+    B.segs.forEach(function(q){
+      var hh = Math.max(0, q.v) / max * ph; if (hh <= 0) return;
+      CX.fillStyle = q.color; CX.globalAlpha = .88; CX.fillRect(cx - bw/2, y0 - hh, bw, hh); CX.globalAlpha = 1;
+      CX.strokeStyle = C.bg; CX.lineWidth = 1.5; CX.strokeRect(cx - bw/2, y0 - hh, bw, hh);
+      if (hh > 17 && q.name){ CX.fillStyle = '#fff'; CX.font = 'bold 13px ' + FONT; CX.textAlign = 'center'; CX.textBaseline = 'middle'; CX.fillText(q.name, cx, y0 - hh/2); }
+      y0 -= hh;
+    });
+    CX.fillStyle = C.ink; CX.font = 'bold 13px ' + FONT; CX.textAlign = 'center'; CX.textBaseline = 'bottom';
+    CX.fillText(o.fmt(tot[i]), cx, y0 - 3);
+    CX.fillStyle = C.txt; CX.font = '13px ' + FONT; CX.textBaseline = 'top';
+    String(B.label).split('\n').forEach(function(s, k){ CX.fillText(s, cx, t + ph + 4 + k * 15); });
+  });
+}
+function clearChart(){ var w = CV.clientWidth, h = CV.clientHeight; CX.clearRect(0, 0, w, h); }
+
+/* ---------- θέμα, iframe, ροή ---------- */
+var onTheme = function(){};
+function setTheme(d){
+  dark = d;
+  document.body.classList.toggle('dark', d);
+  var bt = $('btnTheme');
+  bt.textContent = d ? '☀️ Φωτεινό θέμα' : '🌙 Σκούρο θέμα';
+  bt.setAttribute('aria-pressed', d ? 'true' : 'false');
+  try { localStorage.setItem('gateSimTheme', d ? 'dark' : 'light'); } catch(e){}
+  $('backLink').href = 'index.html' + (d ? '#dark' : '#light');
+  onTheme(); drawChart();
+}
+try { if (window.self !== window.top) document.body.classList.add('embedded'); }
+catch(e){ document.body.classList.add('embedded'); }
+$('btnTheme').addEventListener('click', function(){ setTheme(!dark); });
+$('showFlow').addEventListener('change', function(){ $('circuitCard').classList.toggle('noflow', !this.checked); });
+function initTheme(){
+  var h = (location.hash || '').toLowerCase(), saved = null;
+  try { saved = localStorage.getItem('gateSimTheme'); } catch(e){}
+  if (h === '#dark') setTheme(true); else if (h === '#light') setTheme(false); else setTheme(saved === 'dark');
+}
+
+</script>
+<script>
+(function(){
+
+var A = 0.01, th = 0, running = true, CX0 = 310, CY0 = 175, HH = 62, XL = 235, XR = 395;
+var EC = {cx:760, cy:175, r:78};
+function P3(x, y, z){ return [x - 0.32*z, CY0 - y + 0.26*z]; }
+function cc(v, vm){ /* χρώμα αγωγού: κόκκινο για +, μπλε για −, γκρι για 0 */
+  var t = Math.max(-1, Math.min(1, v/(vm || 1)));
+  return t >= 0 ? mixHex('#8a94a6', '#e8411f', t) : mixHex('#8a94a6', '#1e6fd9', -t);
+}
+var REF = {};
+function build(){
+  clearSVG();
+  var d = SV.querySelector('defs');
+  /* ---- μπροστινή όψη: μαγνήτης ---- */
+  mk('rect', {x:200, y:40, width:230, height:44, rx:4, 'class':'mag', style:'fill:#2f6fd6'}, LY.w);
+  mk('polygon', {points:'200,40 224,24 454,24 430,40', 'class':'mag', style:'fill:#5b8fe6'}, LY.w);
+  mk('polygon', {points:'430,40 454,24 454,68 430,84', 'class':'mag', style:'fill:#1f4fa8'}, LY.w);
+  mk('text', {x:315, y:63, 'class':'magt'}, LY.w, 'N');
+  mk('rect', {x:200, y:268, width:230, height:44, rx:4, 'class':'mag', style:'fill:#e8411f'}, LY.w);
+  mk('polygon', {points:'200,268 224,252 454,252 430,268', 'class':'mag', style:'fill:#f07a5e'}, LY.w);
+  mk('polygon', {points:'430,268 454,252 454,296 430,312', 'class':'mag', style:'fill:#b8300f'}, LY.w);
+  mk('text', {x:315, y:291, 'class':'magt'}, LY.w, 'S');
+  for (var k = 0; k < 6; k++){
+    var x = 214 + k*40; mk('line', {x1:x, y1:90, x2:x, y2:250, 'class':'bl'}, LY.w);
+    mk('polygon', {points:(x-5) + ',236 ' + (x+5) + ',236 ' + x + ',247', 'class':'bla'}, LY.w);
+  }
+  T(452, 146, 'B', 'lbl b', {}); T(452, 120, 'στάτης', 'sm', {}); T(470, 196, 'δρομέας', 'sm', {});
+  /* άξονας, δακτύλιοι, ψήκτρες */
+  mk('line', {x1:70, y1:CY0, x2:520, y2:CY0, 'class':'shaft'}, LY.w);
+  REF.back = mk('polyline', {'class':'loopB', points:''}, LY.w);
+  REF.surf = mk('polygon', {'class':'loopS', points:''}, LY.w);
+  REF.leadA = mk('polyline', {'class':'loopB', points:'', style:'opacity:.9;stroke-width:3'}, LY.w);
+  REF.leadB = mk('polyline', {'class':'loopB', points:'', style:'opacity:.9;stroke-width:3'}, LY.w);
+  [[150,'rB'],[110,'rA']].forEach(function(q){
+    mk('ellipse', {cx:q[0], cy:CY0, rx:9, ry:24, 'class':'ring'}, LY.w);
+  });
+  REF.front = mk('polyline', {'class':'loopF', points:''}, LY.c);
+  REF.la = T(0, 0, 'a', 'lbl b', {}); REF.lb = T(0, 0, 'b', 'lbl b', {});
+  mk('rect', {x:103, y:199, width:14, height:20, 'class':'brush'}, LY.c);
+  mk('rect', {x:143, y:199, width:14, height:20, 'class':'brush'}, LY.c);
+  T(100, 300, 'δακτύλιοι', 'sm', {'text-anchor':'end'}); T(100, 318, 'και ψήκτρες', 'sm', {'text-anchor':'end'});
+  /* εξωτερικό κύκλωμα */
+  W('wA', [[110,219],[110,470],[300,470]]); W('wA', [[360,470],[560,470],[560,436]]);
+  W('wB', [[150,219],[150,400],[324,400]]); W('wB', [[396,400],[560,400],[560,436]]);
+  F('fo', [[150,219],[150,400],[560,400],[560,470],[110,470],[110,219]]);
+  Rz(330, 470, 'h', {name:'R', val:'tR', side:'bottom', halo:'hR'});
+  /* αμπερόμετρο με το μηδέν στη μέση */
+  mk('circle', {cx:360, cy:400, r:36, 'class':'gauge'}, LY.c);
+  for (k = -4; k <= 4; k++){
+    var an = (k*15 - 90) * Math.PI/180, r1 = k === 0 ? 20 : 25;
+    mk('line', {x1:360 + r1*Math.cos(an), y1:404 + r1*Math.sin(an), x2:360 + 30*Math.cos(an), y2:404 + 30*Math.sin(an), 'class':'tick'}, LY.c);
+  }
+  mk('text', {x:360, y:424, 'class':'mlet', style:'font-size:15px'}, LY.c, 'A');
+  REF.needle = mk('line', {x1:360, y1:404, x2:360, y2:376, 'class':'needle'}, LY.c);
+  mk('circle', {cx:360, cy:404, r:3.5, style:'fill:var(--ink)'}, LY.c);
+  T(360, 356, '', 'sm', {'text-anchor':'middle', id:'tRange'});
+  T(404, 390, '', 'vtag', {id:'tI'});
+  /* ---- πλάγια όψη (κατά μήκος του άξονα) ---- */
+  mk('rect', {x:612, y:22, width:276, height:330, rx:10, 'class':'ac'}, LY.w);
+  T(750, 344, 'πλάγια όψη (κατά μήκος του άξονα)', 'sm', {'text-anchor':'middle'});
+  mk('rect', {x:660, y:40, width:200, height:30, rx:4, 'class':'mag', style:'fill:#2f6fd6'}, LY.w);
+  mk('text', {x:760, y:56, 'class':'magt', style:'font-size:22px'}, LY.w, 'N');
+  mk('rect', {x:660, y:282, width:200, height:30, rx:4, 'class':'mag', style:'fill:#e8411f'}, LY.w);
+  mk('text', {x:760, y:298, 'class':'magt', style:'font-size:22px'}, LY.w, 'S');
+  for (k = 0; k < 5; k++){
+    x = 680 + k*40; mk('line', {x1:x, y1:76, x2:x, y2:276, 'class':'bl'}, LY.w);
+    mk('polygon', {points:(x-5) + ',262 ' + (x+5) + ',262 ' + x + ',273', 'class':'bla'}, LY.w);
+  }
+  mk('circle', {cx:EC.cx, cy:EC.cy, r:EC.r, 'class':'orbit'}, LY.w);
+  mk('circle', {cx:EC.cx, cy:EC.cy, r:6, style:'fill:#8a94a6'}, LY.w);
+  REF.eline = mk('line', {'class':'loopF', style:'stroke-width:4'}, LY.c);
+  REF.arc = mk('path', {'class':'loop'}, LY.c);
+  REF.ca = mk('g', null, LY.c); REF.cb = mk('g', null, LY.c);
+  [REF.ca, REF.cb].forEach(function(g){
+    mk('circle', {cx:0, cy:0, r:13, 'class':'cond'}, g);
+    g._dot = mk('circle', {cx:0, cy:0, r:3.5, 'class':'csymd'}, g);
+    g._x1 = mk('line', {x1:-6, y1:-6, x2:6, y2:6, 'class':'csym'}, g);
+    g._x2 = mk('line', {x1:-6, y1:6, x2:6, y2:-6, 'class':'csym'}, g);
+    g._v = mk('line', {'class':'vel', 'marker-end':'url(#vah)'}, LY.c);
+    g._t = T(0, 0, '', 'lbl b', {});
+  });
+  mk('marker', {id:'vah', viewBox:'0 0 10 10', refX:'8', refY:'5', markerWidth:'4', markerHeight:'4', orient:'auto'}, d).innerHTML = '<path class="vel" style="fill:#0f9d58;stroke:none" d="M0,0 L10,5 L0,10 z"/>';
+  REF.tth = T(628, 100, '', 'lbl b', {});
+  T(628, 214, 'ω', 'big', {style:'font-size:24px'});
+  mk('path', {d:'M650,200 A26,26 0 1 0 650,232', 'class':'loop', 'marker-end':'url(#lah)'}, LY.c);
+}
+function vals(){
+  var f = gv('sF'), N = gv('sN'), B = gv('sB'), R = gv('sR'), w = 2*Math.PI*f, E0 = N*B*A*w;
+  return {f:f, N:N, B:B, R:R, w:w, E0:E0, I0:E0/R, e:E0*Math.sin(th), i:E0*Math.sin(th)/R, Phi0:B*A, Phi:B*A*Math.cos(th)};
+}
+function pts(a){ return a.map(function(p){ return p[0].toFixed(1) + ',' + p[1].toFixed(1); }).join(' '); }
+function render(){
+  var v = vals(), s = Math.sin(th), c = Math.cos(th);
+  /* πλευρά a: y = HH·ημθ, z = HH·συνθ  —  πλευρά b αντιδιαμετρικά */
+  var ya = HH*s, za = HH*c;
+  var a1 = P3(XL, ya, za), a2 = P3(XR, ya, za), b1 = P3(XL, -ya, -za), b2 = P3(XR, -ya, -za);
+  var aFront = za >= 0;
+  REF.surf.setAttribute('points', pts([a1, a2, b2, b1]));
+  /* η μπροστινή πλευρά σχεδιάζεται έντονα, η πίσω αχνά */
+  REF.front.setAttribute('points', pts(aFront ? [b2, a2, a1] : [a1, b1, b2]));
+  REF.back.setAttribute('points', pts(aFront ? [a1, b1, b2] : [b2, a2, a1]));
+  REF.leadA.setAttribute('points', pts([a1, P3(XL - 30, ya*0.3, za*0.3), [150, CY0]]));
+  REF.leadB.setAttribute('points', pts([b1, P3(XL - 40, -ya*0.15, -za*0.15), [110, CY0]]));
+  var am = [(a1[0] + a2[0])/2, (a1[1] + a2[1])/2], bm = [(b1[0] + b2[0])/2, (b1[1] + b2[1])/2];
+  REF.la.setAttribute('x', am[0] - 5); REF.la.setAttribute('y', am[1] + (ya >= 0 ? -12 : 24));
+  REF.lb.setAttribute('x', bm[0] - 5); REF.lb.setAttribute('y', bm[1] + (-ya >= 0 ? -12 : 24));
+  /* πλάγια όψη: οριζόντιος άξονας = z, κατακόρυφος = y */
+  var pa = [EC.cx + EC.r*c, EC.cy - EC.r*s], pb = [EC.cx - EC.r*c, EC.cy + EC.r*s];
+  REF.eline.setAttribute('x1', pa[0]); REF.eline.setAttribute('y1', pa[1]); REF.eline.setAttribute('x2', pb[0]); REF.eline.setAttribute('y2', pb[1]);
+  var deg = ((th*180/Math.PI) % 360 + 360) % 360, r0 = 34, ae = [EC.cx + r0*c, EC.cy - r0*s];
+  REF.arc.setAttribute('d', 'M' + (EC.cx + r0) + ',' + EC.cy + ' A' + r0 + ',' + r0 + ' 0 ' + (deg > 180 ? 1 : 0) + ' 0 ' + ae[0].toFixed(1) + ',' + ae[1].toFixed(1));
+  var en = v.e/(v.E0 || 1);
+  [[REF.ca, pa, 1, 'a'], [REF.cb, pb, -1, 'b']].forEach(function(q){
+    var g = q[0], p = q[1], sg = q[2], cur = en*sg;
+    g.setAttribute('transform', 'translate(' + p[0].toFixed(1) + ',' + p[1].toFixed(1) + ')');
+    /* ⊙ προς τον θεατή, ⊗ μακριά από τον θεατή */
+    g._dot.style.display = cur > 0.08 ? '' : 'none';
+    g._x1.style.display = g._x2.style.display = cur < -0.08 ? '' : 'none';
+    var tx = -s*sg, ty = -c*sg, L = 34;
+    g._v.setAttribute('x1', (p[0] + 15*tx).toFixed(1)); g._v.setAttribute('y1', (p[1] + 15*ty).toFixed(1));
+    g._v.setAttribute('x2', (p[0] + (15 + L)*tx).toFixed(1)); g._v.setAttribute('y2', (p[1] + (15 + L)*ty).toFixed(1));
+    g._t.setAttribute('x', (p[0] + 18*Math.cos(th)*sg + (sg > 0 ? 6 : -16)).toFixed(1)); g._t.setAttribute('y', (p[1] - 18*Math.sin(th)*sg + 6).toFixed(1));
+    g._t.textContent = q[3];
+  });
+  REF.tth.textContent = 'θ = ' + Math.round(deg) + '°';
+  /* εξωτερικό κύκλωμα */
+  R_('wB').forEach(function(e){ e.setAttribute('stroke', cc(v.e, v.E0)); });
+  R_('wA').forEach(function(e){ e.setAttribute('stroke', cc(0, 1)); });
+  setI('fo', v.i, Math.max(v.I0, 1e-9));
+  var fs = niceCeil(Math.max(v.I0, 1e-6)*1.15), na = Math.max(-1, Math.min(1, v.i/fs)) * 60 * Math.PI/180;
+  REF.needle.setAttribute('x2', (360 + 28*Math.sin(na)).toFixed(1)); REF.needle.setAttribute('y2', (404 - 28*Math.cos(na)).toFixed(1));
+  setT('tRange', '±' + eng(fs,'A')); setT('tI', 'i = ' + eng(v.i,'A'));
+  setHalo('hR', Math.sqrt(Math.abs(v.i)/Math.max(v.I0, 1e-12)) * 0.8);
+  setT('tR', ohm(v.R));
+  setMeas([
+    ['Γωνία θ = ωt', 'ω = 2πf = ' + nf(v.w,2) + ' rad/s', Math.round(deg) + '°'],
+    ['Περίοδος <i>T</i>', '1 / f', eng(1/v.f,'s')],
+    ['Μαγνητική ροή Φ', 'B · A · συνωt', eng(v.Phi,'Wb')],
+    ['Μέγιστη ΗΕΔ E<sub>0</sub>', 'N · B · A · ω', eng(v.E0,'V')],
+    ['ΗΕΔ <i>e</i>', 'E<sub>0</sub> · ημωt', eng(v.e,'V'), true],
+    ['Ρεύμα <i>i</i>', 'I<sub>0</sub> · ημωt, I<sub>0</sub> = E<sub>0</sub> / R = ' + eng(v.I0,'A'), eng(v.i,'A'), true]
+  ]);
+  var msg, dm = function(a){ return Math.abs(((deg - a + 540) % 360) - 180) < 8; };
+  if (dm(0)) msg = 'θ = 0°: το πλαίσιο είναι <b>κάθετο</b> στις γραμμές του B &mdash; η ροή είναι <b>μέγιστη</b> αλλά δεν μεταβάλλεται, άρα <b>e = 0</b>.';
+  else if (dm(90)) msg = 'θ = 90°: το πλαίσιο είναι <b>παράλληλο</b> στις γραμμές &mdash; Φ = 0, αλλά μεταβάλλεται πιο γρήγορα από κάθε άλλη στιγμή, άρα <b>e = +E<sub>0</sub></b> (μέγιστη).';
+  else if (dm(180)) msg = 'θ = 180°: ξανά <b>κάθετο</b> &mdash; η ροή είναι μέγιστη (−Φ<sub>0</sub>), άρα <b>e = 0</b>. Από εδώ η ΗΕΔ <b>αλλάζει πολικότητα</b>.';
+  else if (dm(270)) msg = 'θ = 270°: ξανά <b>παράλληλο</b> &mdash; <b>e = −E<sub>0</sub></b>: το ρεύμα έχει <b>αντίθετη φορά</b>.';
+  else msg = 'e = E<sub>0</sub> · ημ' + Math.round(deg) + '° = <b>' + eng(v.e,'V') + '</b> &nbsp;·&nbsp; i = <b>' + eng(v.i,'A') + '</b>' + (v.e >= 0 ? '' : ' (αντίθετη φορά)');
+  $('status').innerHTML = msg + (running ? '' : ' &nbsp;<b>(παύση)</b>');
+  drawChart();
+}
+drawChart = function(){
+  var C = PAL(), v = vals(), deg = ((th*180/Math.PI) % 720 + 720) % 720;
+  var em = niceCeil(v.E0*1.15), pm = niceCeil(v.Phi0*1.15), vm = [];
+  for (var k = 1; k < 8; k++) vm.push({x:k*90, label:(k*90) + '°'});
+  lineChart({xmin:0, xmax:720, ymin:-em, ymax:em, xlab:'Γωνία θ = ωt (°)', ylab:'e (V)', ylabColor:C.c[2],
+    y2:{ymin:-pm, ymax:pm, ylab:'Φ (mWb)', ys:1000, color:C.c[0]},
+    curves:[{pts:[[0,0],[720,0]], color:C.c[5], w:1},
+            {f:function(x){ return v.Phi0*Math.cos(x*Math.PI/180); }, color:C.c[0], dash:[6,5], w:2.2, ax:2},
+            {f:function(x){ return v.E0*Math.sin(x*Math.PI/180); }, color:C.c[2], w:3}],
+    vmarks:vm,
+    cur:[{x:deg, y:v.e, color:C.c[2]}, {x:deg, y:v.Phi, color:C.c[0], ax:2}],
+    legend:[{name:'e = E0·ημωt', color:C.c[2]},{name:'Φ = Φ0·συνωt', color:C.c[0], dash:[6,5]}], legendRow:true});
+};
+var lastT = performance.now();
+function frame(now){
+  var dt = Math.min(0.1, (now - lastT)/1000); lastT = now;
+  if (running){ th += 2*Math.PI*gv('sF')*dt; if (th > 4*Math.PI*1000) th -= 4*Math.PI*1000; render(); }
+  requestAnimationFrame(frame);
+}
+function setRun(r){ running = r; $('bPlay').textContent = r ? '⏸ Παύση' : '▶ Συνέχεια'; $('bPlay').classList.toggle('on', r); render(); }
+build();
+slider('sF', function(x){ return nf(x,2) + ' Hz'; }, render);
+slider('sN', function(x){ return String(x); }, render);
+slider('sB', function(x){ return nf(x,1) + ' T'; }, render);
+slider('sR', ohm, render);
+$('bPlay').addEventListener('click', function(){ setRun(!running); });
+$('bStep').addEventListener('click', function(){ setRun(false); th = Math.round((th + Math.PI/12)/(Math.PI/12))*(Math.PI/12); render(); });
+$('bZero').addEventListener('click', function(){ th = 0; render(); });
+document.addEventListener('keydown', function(e){
+  if (e.target && e.target.tagName === 'INPUT') return;
+  if (e.key === ' ' && !(e.target && e.target.tagName === 'BUTTON')){ e.preventDefault(); setRun(!running); }
+});
+onTheme = render;
+initTheme(); render(); resizeChart();
+requestAnimationFrame(frame);
+
+})();
+</script>
+</body>
+</html>
