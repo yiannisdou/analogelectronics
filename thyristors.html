@@ -64,7 +64,9 @@ svg .flow{stroke:var(--flow);stroke-width:4;fill:none;stroke-dasharray:3 15;stro
 svg .on{stroke:var(--hot)!important}
 svg .onf{fill:var(--hot)!important}
 @media (max-width:1000px){main{grid-template-columns:1fr}body{height:auto}.svgbox{height:380px}.plotbox{height:300px}}
-
+svg .sw{stroke:var(--wire);stroke-width:2.6;stroke-linecap:round;fill:none;transition:all .12s}
+svg .term{fill:var(--panel);stroke:var(--wire);stroke-width:2}
+svg .tl{fill:var(--muted);font-family:Calibri,Carlito,Arial,sans-serif;font-weight:700}
 </style>
 </head>
 <body>
@@ -76,8 +78,8 @@ svg .onf{fill:var(--hot)!important}
 </header>
 <main>
  <div class="panel"><h2>Κύκλωμα</h2>
-  <div class="row"><button id="t0" class="on" style="min-width:200px">Δίοδος P-N-P-N</button><button id="t1" style="min-width:130px">SCR</button><button id="t2" style="min-width:230px">TRIAC – έλεγχος φάσης</button></div>
-  <div class="svgbox"><svg id="sv" viewBox="0 0 680 330"></svg></div>
+  <div class="row"><button id="t0" class="on" style="min-width:200px">Δίοδος P-N-P-N</button><button id="t1" style="min-width:130px">SCR</button><button id="t2" style="min-width:250px">TRIAC – ρυθμιστής φωτισμού</button></div>
+  <div class="svgbox"><svg id="sv" viewBox="0 0 700 340"></svg></div>
   <div class="row" id="btns"></div>
   <div class="ctrls" id="ctl"></div>
  </div>
@@ -87,9 +89,10 @@ svg .onf{fill:var(--hot)!important}
  </div>
 </main>
 <details><summary>Πώς λειτουργεί</summary>
-<p><b>Δίοδος P-N-P-N (παράδειγμα 7.1.1):</b> αύξησε αργά την τάση: μέχρι τα 10 V (V<sub>BO</sub>) δεν περνά ρεύμα. Στα 10 V η δίοδος "ανάβει" και το ρεύμα καθορίζεται από την R = 1 kΩ. Μείωσε τώρα την τάση: η δίοδος μένει ON μέχρι το ρεύμα να πέσει κάτω από I<sub>H</sub> = 4 mA, δηλαδή μέχρι τα 4 V. Η γραμμή στο γράφημα δείχνει τη διαδρομή (μανδάλωση – υστέρηση).</p>
-<p><b>SCR:</b> με τάση ανόδου μικρότερη από τη V<sub>BO</sub>, ένας σύντομος παλμός ρεύματος στην πύλη αρκεί για να ανάψει η λάμπα. Μετά η πύλη δεν έχει πια έλεγχο: για να σβήσει πρέπει να διακοπεί (στιγμιαία) η τάση ανόδου.</p>
-<p><b>TRIAC – έλεγχος φάσης:</b> σε κάθε ημιπερίοδο το TRIAC σκανδαλίζεται με καθυστέρηση (γωνία έναυσης α) και άγει μέχρι τον επόμενο μηδενισμό της τάσης. Όσο μεγαλύτερη η α, τόσο λιγότερη ισχύς φτάνει στη λάμπα. Έτσι λειτουργεί ένας ρυθμιστής φωτισμού (dimmer).</p>
+<p><b>Δίοδος P-N-P-N (παράδειγμα 7.1.1):</b> αύξησε αργά την τάση. Μέχρι τα 10 V (V<sub>BO</sub>) δεν περνά ρεύμα· στα 10 V η δίοδος "ανάβει" και το ρεύμα καθορίζεται από την R = 1 kΩ. Μείωσε μετά την τάση: η δίοδος μένει ON μέχρι το ρεύμα να πέσει κάτω από I<sub>H</sub> = 4 mA (4 V). Η κόκκινη γραμμή δείχνει τη διαδρομή (μανδάλωση).</p>
+<p><b>SCR:</b> με τάση ανόδου μικρότερη από τη V<sub>BO</sub>, πάτησε το μπουτόν S1: ένας σύντομος παλμός ρεύματος στην πύλη (μέσω της R<sub>G</sub>) ανάβει τη λάμπα. Μετά η πύλη δεν έχει πια έλεγχο. Για να σβήσει ο SCR πρέπει να διακοπεί στιγμιαία το ρεύμα ανόδου με το μπουτόν S2.</p>
+<p><b>TRIAC – ρυθμιστής φωτισμού:</b> ο πυκνωτής C φορτίζεται από το δίκτυο μέσω του ποτενσιομέτρου P και της R. Όταν η τάση του φτάσει την τάση διάσπασης του DIAC (≈ 32 V), το DIAC άγει και δίνει παλμό στην πύλη· το TRIAC ανάβει και άγει ως τον επόμενο μηδενισμό. Μεγαλύτερη αντίσταση P → αργότερη φόρτιση → μεγαλύτερη γωνία έναυσης α → λιγότερη ισχύς στη λάμπα. Το ίδιο γίνεται και στην αρνητική ημιπερίοδο, γιατί και το DIAC και το TRIAC είναι αμφίδρομα.</p>
+<p><b>Ακροδέκτες TRIAC:</b> όπως στο σχήμα του βιβλίου, ο ακροδέκτης αναφοράς δίπλα στην πύλη είναι ο A2· στα φυλλάδια των κατασκευαστών λέγεται MT1.</p>
 </details>
 <script>
 // ---------- κοινά εργαλεία της σειράς ----------
@@ -199,70 +202,125 @@ function setTheme(d){document.body.classList.toggle('dark',d);$('themeBtn').text
 const C={hot:()=>css('--hot'),acc:()=>css('--accent'),ink:()=>css('--ink'),mut:()=>css('--muted'),good:()=>css('--good'),warn:()=>css('--warn')};
 </script>
 <script>
-const sv=$('sv');let tab=0;const g=el('g',{},sv);let ctlEls=[];
+const sv=$('sv');let tab=0;const g=el('g',{},sv);
 function tabs(i){tab=i;for(let j=0;j<3;j++)$('t'+j).classList.toggle('on',j===i);build();}
 for(let j=0;j<3;j++)$('t'+j).onclick=()=>tabs(j);
-function pnpn(p,x,y1,y2,lbl,gate){const d=diode(p,x,y1,x,y2,{});const c=(y1+y2)/2;el('path',{d:`M${x-14} ${c-8} L${x+14} ${c-8}`,class:'comp'},p);
- if(gate)el('path',{d:`M${x+8} ${c+14} L${x+40} ${c+34}`,class:'w'},p);txt(p,x+24,c-18,lbl,16,'t','start');return d;}
-function triac(p,x,y1,y2){const gg=el('g',{},p);const c=(y1+y2)/2,h=16;el('path',{d:`M${x} ${y1} L${x} ${c-h} M${x} ${c+h} L${x} ${y2}`,class:'w'},gg);
- el('path',{d:`M${x-22} ${c-h} L${x+22} ${c-h} M${x-22} ${c+h} L${x+22} ${c+h}`,class:'comp'},gg);
- const t1=el('path',{d:`M${x-20} ${c-h} L${x-2} ${c-h} L${x-11} ${c+h} Z`,class:'compf'},gg);const t2=el('path',{d:`M${x+2} ${c+h} L${x+20} ${c+h} L${x+11} ${c-h} Z`,class:'compf'},gg);
- el('path',{d:`M${x+14} ${c+h} L${x+40} ${c+h+22}`,class:'w'},gg);gg.t=[t1,t2];return gg;}
+// ---------- σύμβολα (κατακόρυφα, άνοδος/A1 πάνω) ----------
+function tlab(p,x,y,s,anchor='start'){return txt(p,x,y,s,15,'tl',anchor);}
+function shockley(p,x,y1,y2){const gg=el('g',{},p);const c=(y1+y2)/2,h=15,w=17;
+ el('path',{d:`M${x} ${y1} L${x} ${c-h} M${x} ${c+h} L${x} ${y2}`,class:'w'},gg);
+ gg.tri=el('path',{d:`M${x-w} ${c-h} L${x+w} ${c-h} L${x} ${c+h} Z`,class:'compf'},gg);
+ el('path',{d:`M${x-w} ${c+h} L${x+w} ${c+h} L${x+w} ${c+h-10}`,class:'comp'},gg); // ράβδος καθόδου σε σχήμα «4 στρώσεων»
+ tlab(gg,x-10,y1+8,'A','end');tlab(gg,x-10,y2-6,'K','end');return gg;}
+function scr(p,x,y1,y2){const gg=el('g',{},p);const c=(y1+y2)/2,h=15,w=17;
+ el('path',{d:`M${x} ${y1} L${x} ${c-h} M${x} ${c+h} L${x} ${y2}`,class:'w'},gg);
+ gg.tri=el('path',{d:`M${x-w} ${c-h} L${x+w} ${c-h} L${x} ${c+h} Z`,class:'compf'},gg);
+ el('path',{d:`M${x-w} ${c+h} L${x+w} ${c+h}`,class:'comp'},gg);
+ el('path',{d:`M${x-6} ${c+h} L${x-30} ${c+h+22} L${x-44} ${c+h+22}`,class:'w'},gg); // πύλη από την πλευρά της καθόδου
+ gg.G=[x-44,c+h+22];tlab(gg,x+12,y1+8,'A');tlab(gg,x+12,y2-6,'K');tlab(gg,x-34,c+h+38,'G','middle');return gg;}
+function triac(p,x,y1,y2){const gg=el('g',{},p);const c=(y1+y2)/2,h=16,w=22;
+ el('path',{d:`M${x} ${y1} L${x} ${c-h} M${x} ${c+h} L${x} ${y2}`,class:'w'},gg);
+ el('path',{d:`M${x-w-2} ${c-h} L${x+w+2} ${c-h} M${x-w-2} ${c+h} L${x+w+2} ${c+h}`,class:'comp'},gg);
+ const t1=el('path',{d:`M${x-w} ${c-h} L${x-2} ${c-h} L${x-11} ${c+h} Z`,class:'compf'},gg);
+ const t2=el('path',{d:`M${x+2} ${c+h} L${x+w} ${c+h} L${x+11} ${c-h} Z`,class:'compf'},gg);
+ el('path',{d:`M${x+w-2} ${c+h} L${x+w+20} ${c+h+22} L${x+w+36} ${c+h+22}`,class:'w'},gg); // πύλη δίπλα στον A2
+ gg.G=[x+w+36,c+h+22];gg.t=[t1,t2];tlab(gg,x-14,y1+8,'A1','end');tlab(gg,x-14,y2-6,'A2','end');tlab(gg,x+w+26,c+h+38,'G','middle');return gg;}
+function diac(p,x1,x2,y){const gg=el('g',{},p);const c=(x1+x2)/2,h=15,w=21;
+ el('path',{d:`M${x1} ${y} L${c-h} ${y} M${c+h} ${y} L${x2} ${y}`,class:'w'},gg);
+ el('path',{d:`M${c-h} ${y-w-2} L${c-h} ${y+w+2} M${c+h} ${y-w-2} L${c+h} ${y+w+2}`,class:'comp'},gg);
+ gg.t1=el('path',{d:`M${c-h} ${y-w} L${c-h} ${y-2} L${c+h} ${y-11} Z`,class:'compf'},gg);
+ gg.t2=el('path',{d:`M${c+h} ${y+2} L${c+h} ${y+w} L${c-h} ${y+11} Z`,class:'compf'},gg);return gg;}
+function pot(p,x,y1,y2,label){const gg=resistor(p,x,y1,x,y2,'',0,0);const c=(y1+y2)/2;
+ el('path',{d:`M${x-22} ${c+22} L${x+20} ${c-20}`,class:'comp'},gg);el('path',{d:`M${x+24} ${c-24} L${x+10} ${c-21} L${x+19} ${c-12} Z`,class:'wf'},gg);
+ txt(gg,x+28,c+4,label,18,'t','start');return gg;}
+// διακόπτης/μπουτόν οριζόντιος από x1 σε x2 (closed=true → κλειστό)
+function pushSw(p,x1,x2,y,label,nc){const gg=el('g',{},p);const a=x1+12,b=x2-12;
+ el('path',{d:`M${x1} ${y} L${a} ${y} M${b} ${y} L${x2} ${y}`,class:'w'},gg);
+ el('circle',{cx:a,cy:y,r:4,class:'term'},gg);el('circle',{cx:b,cy:y,r:4,class:'term'},gg);
+ const bar=el('path',{class:'sw'},gg);const stem=el('path',{class:'sw'},gg);txt(gg,(a+b)/2,y-32,label,16,'t');
+ gg.set=closed=>{const yy=closed?y-5:y-16;bar.setAttribute('d',`M${a-3} ${yy} L${b+3} ${yy}`);stem.setAttribute('d',`M${(a+b)/2} ${yy} L${(a+b)/2} ${yy-11} M${(a+b)/2-7} ${yy-11} L${(a+b)/2+7} ${yy-11}`);};
+ gg.set(!!nc);return gg;}
+// ---------- κατάσταση ----------
 let S={},state=false,hist=[],gateT=0,breakT=0,phase=0;
 function clearCtl(){$('ctl').innerHTML='';$('btns').innerHTML='';}
-function build(){g.innerHTML='';flows.length=0;clearCtl();hist=[];state=false;S={};
+function btn(t,w,f){const b=document.createElement('button');b.textContent=t;b.style.minWidth=w+'px';$('btns').appendChild(b);if(f)b.onclick=f;return b;}
+function build(){g.innerHTML='';flows.length=0;sliders.length=0;clearCtl();hist=[];state=false;S={};
  if(tab===0){$('ptitle').textContent='Χαρακτηριστική I–V διόδου P-N-P-N και ευθεία φόρτου';
   S.sV=slider($('ctl'),'v','Τάση πηγής V',0,20,0.1,0,v=>fmt(v,1)+' V');
-  battery(g,150,100,260,'');S.lV=txt(g,120,180,'',19,'t','end');wire(g,[[150,100],[150,60],[260,60]]);resistor(g,260,60,400,60,'R = 1 kΩ',330,28,18);wire(g,[[400,60],[480,60],[480,110]]);
-  S.d=pnpn(g,480,110,230,'D (P-N-P-N)');wire(g,[[480,230],[480,290],[150,290],[150,260]]);ground(g,320,290);
-  S.lI=txt(g,330,100,'',18,'ta');S.lVD=txt(g,520,250,'',17,'ta','start');S.f=flowPath(g,[[150,90],[150,60],[480,60],[480,290],[150,290],[150,262]]);
-  const b=document.createElement('button');b.textContent='↺ Μηδενισμός';b.onclick=()=>{S.sV.value=0;hist=[];state=false;update();};$('btns').appendChild(b);}
+  battery(g,170,110,250,'');S.lV=txt(g,140,180,'',19,'t','end');wire(g,[[170,110],[170,60],[270,60]]);resistor(g,270,60,410,60,'R = 1 kΩ',340,28,18);wire(g,[[410,60],[490,60],[490,110]]);
+  S.d=shockley(g,490,110,230);txt(g,520,170,'δίοδος P-N-P-N',16,'t','start');txt(g,520,192,'V<tspan font-size="12" dy="5">BO</tspan><tspan dy="-5"> = 10 V, I</tspan><tspan font-size="12" dy="5">H</tspan><tspan dy="-5"> = 4 mA</tspan>',15,'tm','start');
+  wire(g,[[490,230],[490,300],[170,300],[170,250]]);ground(g,330,300);
+  S.lI=txt(g,340,100,'',18,'ta');S.lVD=txt(g,520,250,'',17,'ta','start');S.f=flowPath(g,[[170,100],[170,60],[490,60],[490,300],[170,300],[170,252]]);
+  btn('↺ Μηδενισμός',130,()=>{S.sV.value=0;hist=[];state=false;update();});}
  if(tab===1){$('ptitle').textContent='Χαρακτηριστικές SCR για διάφορα ρεύματα πύλης';
-  S.sV=slider($('ctl'),'v','Τάση ανόδου V<sub>AA</sub>',0,30,0.5,12,v=>fmt(v,1)+' V');S.sG=slider($('ctl'),'ig','Ρεύμα παλμού πύλης I<sub>G</sub>',0,10,0.5,5,v=>fmt(v,1)+' mA');
-  battery(g,560,110,250,'');S.lV=txt(g,592,180,'',18,'t','start');wire(g,[[560,110],[560,50],[430,50]]);S.lamp=lamp(g,400,50,20);wire(g,[[380,50],[330,50],[330,110]]);
-  S.d=pnpn(g,330,110,230,'SCR',true);wire(g,[[330,230],[330,290],[560,290],[560,250]]);ground(g,450,290);
-  resistor(g,370,204,250,204,'R<tspan font-size="12" dy="5">G</tspan>',306,176,17);wire(g,[[250,204],[150,204],[150,230]]);battery(g,150,230,280,'');wire(g,[[150,280],[150,290],[330,290]]);
-  S.sw=txt(g,150,190,'',15,'ta');txt(g,118,256,'πύλη',15,'tm','end');
-  S.fA=flowPath(g,[[560,100],[560,50],[330,50],[330,290],[560,290],[560,252]]);S.fG=flowPath(g,[[150,228],[150,204],[370,204]]);S.lI=txt(g,450,20,'',17,'ta');
-  const b1=document.createElement('button');b1.textContent='⚡ Παλμός πύλης';b1.style.minWidth='150px';b1.onclick=()=>{gateT=0.5;};
-  const b2=document.createElement('button');b2.textContent='⏻ Διακοπή ανόδου';b2.style.minWidth='160px';b2.onclick=()=>{breakT=0.4;};$('btns').append(b1,b2);}
- if(tab===2){$('ptitle').textContent='Τάση δικτύου (διακεκομμένη) και τάση στη λάμπα (συνεχής)';
-  S.sA=slider($('ctl'),'a','Γωνία έναυσης α',0,180,1,90,v=>fmt(v,0)+'°');
-  acsrc(g,140,90,250,'230 V ~',112);wire(g,[[140,90],[140,50],[330,50]]);S.lamp=lamp(g,360,50,22);wire(g,[[382,50],[520,50],[520,110]]);
-  S.d=triac(g,520,110,230);wire(g,[[520,230],[520,290],[140,290],[140,250]]);txt(g,560,150,'TRIAC',16,'t','start');
-  txt(g,575,272,'G',15,'tm','start');txt(g,400,315,'(η πύλη συνδέεται σε κύκλωμα σκανδαλισμού με DIAC)',14,'tm','middle');
-  S.f=flowPath(g,[[140,80],[140,50],[520,50],[520,290],[140,290],[140,252]]);S.lI=txt(g,330,100,'',17,'ta');}
+  S.sV=slider($('ctl'),'v','Τάση ανόδου V<sub>AA</sub>',0,30,0.5,12,v=>fmt(v,1)+' V');S.sG=slider($('ctl'),'ig','Ρεύμα πύλης I<sub>G</sub> (όταν πατηθεί το S1)',0,10,0.5,5,v=>fmt(v,1)+' mA');
+  // κύκλωμα ανόδου
+  battery(g,620,120,250,'');S.lV=txt(g,596,185,'',17,'t','end');
+  wire(g,[[620,120],[620,50],[575,50]]);S.s2=pushSw(g,505,575,50,'S2 (NC)',true);wire(g,[[505,50],[452,50]]);S.lamp=lamp(g,430,50,22);txt(g,430,95,'λάμπα 300 Ω',14,'tm');
+  wire(g,[[408,50],[360,50],[360,110]]);S.d=scr(g,360,110,230);wire(g,[[360,230],[360,300],[620,300],[620,250]]);ground(g,490,300);
+  // κύκλωμα πύλης
+  const G=S.d.G;wire(g,[G,[300,G[1]]]);resistor(g,300,G[1],210,G[1],'R<tspan font-size="12" dy="5">G</tspan> = 1 kΩ',255,G[1]-26,15);
+  wire(g,[[210,G[1]],[200,G[1]]]);S.s1=pushSw(g,130,200,G[1],'S1',false);wire(g,[[130,G[1]],[90,G[1]],[90,230]]);
+  battery(g,90,230,280,'');txt(g,60,256,'V<tspan font-size="12" dy="5">GG</tspan><tspan dy="-5"> = 6 V</tspan>',15,'t','end');wire(g,[[90,280],[90,300],[360,300]]);dot(g,360,300);
+  S.fA=flowPath(g,[[620,110],[620,50],[360,50],[360,300],[620,300],[620,252]]);S.fG=flowPath(g,[[90,228],[90,G[1]],[G[0],G[1]],[360,230],[360,300],[90,300],[90,282]]);S.lI=txt(g,430,18,'',17,'ta');
+  btn('⚡ S1: παλμός πύλης',180,()=>{gateT=0.5;});btn('⏻ S2: διακοπή ανόδου',190,()=>{breakT=0.4;});}
+ if(tab===2){$('ptitle').textContent='Τάση δικτύου, τάση λάμπας και τάση πυκνωτή';
+  S.sP=slider($('ctl'),'p','Ποτενσιόμετρο P',0,100,1,55,v=>fmtU(potR(v),'Ω',0));
+  acsrc(g,80,110,250,'230 V',52);txt(g,52,200,'50 Hz',14,'tm','end');wire(g,[[80,110],[80,40],[210,40]]);S.lamp=lamp(g,235,40,24);txt(g,235,88,'λάμπα',14,'tm');
+  wire(g,[[260,40],[430,40],[430,110]]);dot(g,430,40);
+  S.d=triac(g,430,110,230);wire(g,[[430,230],[430,300],[80,300],[80,250]]);ground(g,250,300);dot(g,430,300);
+  // κύκλωμα σκανδαλισμού: P + R → κόμβος X → C προς A2, DIAC προς πύλη
+  wire(g,[[430,40],[630,40],[630,55]]);pot(g,630,55,140,'P');wire(g,[[630,140],[630,150]]);resistor(g,630,150,630,205,'',0,0);txt(g,606,170,'R = 3,3 kΩ',15,'t','end');
+  wire(g,[[630,205],[630,253]]);
+  wire(g,[[630,253],[630,262]]);cap(g,630,262,630,292,'',0,0);txt(g,606,277,'C = 100 nF',15,'t','end');wire(g,[[630,292],[630,300],[430,300]]);
+  const G=S.d.G;S.dc=diac(g,G[0]+6,600,G[1]);wire(g,[G,[G[0]+6,G[1]]]);wire(g,[[600,G[1]],[630,G[1]]]);dot(g,630,G[1]);txt(g,644,G[1]+2,'X',15,'tl','start');txt(g,(G[0]+600)/2,G[1]+38,'DIAC',15,'t');
+  S.f=flowPath(g,[[80,100],[80,40],[430,40],[430,300],[80,300],[80,252]]);S.fT=flowPath(g,[[430,40],[630,40],[630,300],[430,300]]);
+  S.lA=txt(g,330,330,'',16,'ta');
+  S.pauseB=btn('⏸ Παύση',110,()=>{S.paused=!S.paused;S.pauseB.textContent=S.paused?'▶ Συνέχεια':'⏸ Παύση';});}
  update();}
 function vbo(ig){return Math.max(1.2,20*(1-ig/6));}
+function potR(v){return Math.round(logMap(v,2e3,470e3)/1e3)*1e3;}
+// προσομοίωση ρυθμιστή φωτισμού (μόνιμη κατάσταση)
+function dimmer(Rp){const R=Rp+3300,C=100e-9,Vm=325,f=50,VBO=32,dt=5e-6;let vc=0,on=false;const out=[];const per=1/f;const N=Math.round(per/dt);let alphas=[];
+ for(let k=0;k<8*N;k++){const t=k*dt;const vs=Vm*Math.sin(2*Math.PI*f*t);if(on&&k%(N/2)===0)on=false; // σβήνει στον μηδενισμό
+  const vn=on?0:vs; vc+=(vn-vc)/(R*C)*dt;
+  if(!on&&Math.abs(vc)>=VBO){on=true;vc-=Math.sign(vc)*12;const ph=(k%(N/2))/(N/2)*180;if(k>=6*N)alphas.push(ph);}
+  if(k>=6*N&&k%10===0)out.push([(t-6*per)*1000,vs,on?vs:0,vc]);}
+ const a=alphas.length?alphas.reduce((x,y)=>x+y,0)/alphas.length:180;return {out,a,R,C};}
 function update(){if(tab===0){const V=+S.sV.value;if(!state&&V>=10){state=true;hist.push([10,0],[10,0.01]);}let I=state?V/1000:0;if(state&&I<4e-3){state=false;I=0;hist.push([4,0.004],[4,0]);}
-  const VD=state?0:V;hist.push([V,I]);if(hist.length>400)hist.shift();S.V=V;S.I=I;S.VD=VD;
-  S.lV.innerHTML='V = '+fmt(V,1)+' V';S.lI.innerHTML='I = '+fmt(I*1000,1)+' mA';S.lVD.innerHTML='V<tspan font-size="12" dy="5">D</tspan><tspan dy="-5"> ≈ '+fmt(VD,1)+' V</tspan>';
+  const VD=state?0.8:V;hist.push([V,I]);if(hist.length>400)hist.shift();S.V=V;S.I=I;
+  S.lV.innerHTML='V = '+fmt(V,1)+' V';S.lI.innerHTML='I = '+fmt(I*1000,1)+' mA';S.lVD.innerHTML='V<tspan font-size="12" dy="5">AK</tspan><tspan dy="-5"> ≈ '+fmt(VD,1)+' V</tspan>';
   S.d.tri.classList.toggle('onf',state);setFlow(S.f,I);
   $('ro').innerHTML=[['Τάση σκανδαλισμού V<sub>BO</sub>','10 V'],['Ρεύμα συγκράτησης I<sub>H</sub>','4 mA'],['Κατάσταση διόδου',state?'ON (μανδαλωμένη)':'OFF'],['Ρεύμα I = V/R (σε ON)',fmt(I*1000,1)+' mA'],['Τάση σβησίματος V = I<sub>H</sub>·R','4 V']].map(x=>`<tr><td>${x[0]}</td><td>${x[1]}</td></tr>`).join('');
   const s=$('st');s.className='status '+(state?'good':'warn');s.innerHTML=state?(V<10?'Η δίοδος παραμένει <b>ON</b> παρόλο που V < 10 V – <b>μανδάλωση</b>! Θα σβήσει όταν I < 4 mA (V < 4 V).':'Η δίοδος είναι <b>ON</b>: το ρεύμα καθορίζεται μόνο από την R.'):'Η δίοδος είναι <b>OFF</b>: δεν περνά ρεύμα, όλη η τάση είναι στη δίοδο.';}
  if(tab===1){const V=+S.sV.value,ig=gateT>0?+S.sG.value:0;const vb=vbo(ig);if(breakT>0){state=false;}else if(!state&&V>=vb&&V>1)state=true;
-  let I=state?(V-1)/300:0;if(state&&I<0.005){state=false;I=0;}S.I=I;S.V=V;S.ig=ig;
-  S.lV.innerHTML='V<tspan font-size="12" dy="5">AA</tspan><tspan dy="-5"> = '+fmt(breakT>0?0:V,1)+' V</tspan>';S.lI.innerHTML='I<tspan font-size="12" dy="5">A</tspan><tspan dy="-5"> = '+fmt(I*1000,0)+' mA</tspan>';
-  S.sw.innerHTML=ig>0?'παλμός I<tspan font-size="11" dy="4">G</tspan><tspan dy="-4"> = '+fmt(ig,1)+' mA</tspan>':'';
+  let I=state&&breakT<=0?(V-1)/300:0;if(state&&I<0.005){state=false;I=0;}S.I=I;S.V=V;S.ig=ig;
+  S.s1.set(gateT>0);S.s2.set(!(breakT>0));
+  S.lV.innerHTML='V<tspan font-size="12" dy="5">AA</tspan><tspan dy="-5"> = '+fmt(V,1)+' V</tspan>';S.lI.innerHTML='I<tspan font-size="12" dy="5">A</tspan><tspan dy="-5"> = '+fmt(I*1000,0)+' mA</tspan>';
   S.d.tri.classList.toggle('onf',state);S.lamp.set(state?Math.min(1,I/0.08):0);setFlow(S.fA,I);setFlow(S.fG,ig/1000);
-  $('ro').innerHTML=[['V<sub>BO</sub> χωρίς ρεύμα πύλης','20 V'],['V<sub>BO</sub> με το τρέχον ρεύμα πύλης',fmt(vb,1)+' V'],['Ρεύμα συγκράτησης I<sub>H</sub>','5 mA'],['Κατάσταση SCR',state?'ON':'OFF'],['Ρεύμα ανόδου (λάμπα 300 Ω)',fmt(I*1000,0)+' mA']].map(x=>`<tr><td>${x[0]}</td><td>${x[1]}</td></tr>`).join('');
-  const s=$('st');s.className='status '+(state?'good':'warn');s.innerHTML=state?'Ο SCR <b>άγει</b> και παραμένει ON ακόμη και χωρίς ρεύμα πύλης. Για να σβήσει: «Διακοπή ανόδου».':(V>=20?'':'Ο SCR είναι <b>OFF</b>. Πάτησε «Παλμός πύλης» – με αρκετό I<sub>G</sub> ανάβει σε πολύ μικρότερη τάση από τα 20 V.');}
- if(tab===2){const a=+S.sA.value*Math.PI/180;const P=1-a/Math.PI+Math.sin(2*a)/(2*Math.PI);S.a=a;S.P=P;S.lamp.set(Math.pow(P,0.7));
-  $('ro').innerHTML=[['Γωνία έναυσης α',fmt(a*180/Math.PI,0)+'°'],['Καθυστέρηση έναυσης (50 Hz)',fmt(a/Math.PI*10,2)+' ms'],['Ισχύς στη λάμπα (% της μέγιστης)',fmt(P*100,1)+' %'],['Ενεργός τάση στη λάμπα',fmt(230*Math.sqrt(P),0)+' V']].map(x=>`<tr><td>${x[0]}</td><td>${x[1]}</td></tr>`).join('');
-  const s=$('st');s.className='status';s.innerHTML='Το TRIAC σκανδαλίζεται '+fmt(a*180/Math.PI,0)+'° μετά από κάθε μηδενισμό και σβήνει στον επόμενο μηδενισμό του ρεύματος.';}
+  $('ro').innerHTML=[['V<sub>BO</sub> χωρίς ρεύμα πύλης','20 V'],['V<sub>BO</sub> με το τρέχον ρεύμα πύλης',fmt(vb,1)+' V'],['Ρεύμα πύλης τώρα',fmt(ig,1)+' mA'],['Ρεύμα συγκράτησης I<sub>H</sub>','5 mA'],['Κατάσταση SCR',state?'ON':'OFF'],['Ρεύμα ανόδου (λάμπα 300 Ω)',fmt(I*1000,0)+' mA']].map(x=>`<tr><td>${x[0]}</td><td>${x[1]}</td></tr>`).join('');
+  const s=$('st');s.className='status '+(state?'good':'warn');s.innerHTML=state?'Ο SCR <b>άγει</b> και παραμένει ON ακόμη κι αν αφήσεις το S1. Για να σβήσει: πάτησε το S2 (διακοπή ανόδου).':(V>=20?'Η τάση ανόδου ξεπερνά τη V<sub>BO</sub> – ο SCR θα ανάψει και χωρίς πύλη.':'Ο SCR είναι <b>OFF</b>. Πάτησε το S1 – με αρκετό I<sub>G</sub> ανάβει σε πολύ μικρότερη τάση από τα 20 V.');}
+ if(tab===2){const Rp=potR(+S.sP.value);const D=dimmer(Rp);S.D=D;const a=D.a*Math.PI/180;const P=D.a>=179?0:1-a/Math.PI+Math.sin(2*a)/(2*Math.PI);S.a=a;S.P=P;S.lamp.set(Math.pow(P,0.7));
+  S.lA.innerHTML='γωνία έναυσης α ≈ '+fmt(D.a,0)+'°';
+  $('ro').innerHTML=[['Αντίσταση φόρτισης P + R',fmtU(D.R,'Ω',1)],['Σταθερά χρόνου τ = (P + R)·C',fmt(D.R*D.C*1000,2)+' ms'],['Γωνία έναυσης α',D.a>=179?'— (δεν σκανδαλίζεται)':fmt(D.a,0)+'°  ('+fmt(D.a/180*10,2)+' ms)'],['Ισχύς στη λάμπα (% της μέγιστης)',fmt(P*100,1)+' %'],['Ενεργός τάση στη λάμπα',fmt(230*Math.sqrt(P),0)+' V']].map(x=>`<tr><td>${x[0]}</td><td>${x[1]}</td></tr>`).join('');
+  const s=$('st');s.className='status '+(P>0?'good':'warn');s.innerHTML=P>0?'Η τάση του C φτάνει τα ±32 V '+fmt(D.a,0)+'° μετά από κάθε μηδενισμό: το DIAC δίνει παλμό και το TRIAC ανάβει μέχρι τον επόμενο μηδενισμό.':'Η αντίσταση είναι τόσο μεγάλη που ο C δεν φτάνει ποτέ τα 32 V: το DIAC δεν άγει και η λάμπα μένει σβηστή.';}
  redraw();}
-function redraw(){if(tab===0&&S.sV){const ch=[[0,0],[10,0.4],[10.05,0.5]],on=[[0.8,4],[0.9,30]];
+function redraw(){if(tab===0&&S.sV){
   plot($('cv'),{xmin:0,xmax:21,ymin:0,ymax:22,xlabel:'τάση V (V)',ylabel:'ρεύμα I (mA)',series:[{pts:hist.map(q=>[q[0],q[1]*1000]),color:C.warn(),w:4},{pts:[[0,0],[20,20]],color:C.acc(),dash:[6,5],w:1.5,label:'I = V/R (ON)',lp:[14,14],dx:6,dy:12}],
    points:[{x:S.V,y:S.I*1000,label:state?'ON':'OFF'}],vlines:[{x:10},{x:4}],hlines:[{y:4,label:'I_H = 4 mA'}],legend:[{t:'διαδρομή',color:C.warn()}]});}
  if(tab===1&&S.sV){const ser=[];[0,2,4,5.5].forEach((ig,k)=>{const vb=vbo(ig);ser.push({pts:[[0,0],[vb,1.5]],color:k===0?C.ink():C.mut(),w:1.8});ser.push({pts:[[vb,1.5],[vb,14+k*14]],color:C.mut(),w:1,dash:[3,3],label:'I_G='+fmt(ig,1)+' mA',lp:[vb,14+k*14],dx:0,dy:-4,la:'center'});});ser.push({pts:[[1.2,5],[1.6,95]],color:C.ink(),w:2,label:'ON',lp:[1.6,95],dx:6,dy:10});
   ser.push({pts:[[1,0],[31,100]],color:C.acc(),dash:[6,5],w:1.5});
   plot($('cv'),{xmin:0,xmax:32,ymin:0,ymax:100,xlabel:'V_AK (V)',ylabel:'I_A (mA)',series:ser,points:[{x:state?1.2:S.V,y:S.I*1000,label:state?'ON':'OFF'}],hlines:[{y:5,label:'I_H'}]});}
- if(tab===2&&S.sA){const a=S.a,m=[],l=[];for(let k=0;k<=400;k++){const th=4*Math.PI*k/400;const v=325*Math.sin(th);m.push([th*10/Math.PI,v]);const ph=th%Math.PI;l.push([th*10/Math.PI,ph>=a?v:0]);}
-  plot($('cv'),{xmin:0,xmax:40,ymin:-360,ymax:360,xlabel:'t (ms)',ylabel:'τάση (V)',xticks:[0,10,20,30,40],series:[{pts:m,color:C.mut(),dash:[5,4],w:1.5},{pts:l,color:C.acc(),w:2.6}],vlines:[{x:a*10/Math.PI},{x:10+a*10/Math.PI}]});}}
+ if(tab===2&&S.D){const o=S.D.out;const cur=phase*40;
+  plot($('cv'),{subs:[{xmin:0,xmax:40,ymin:-360,ymax:360,xlabel:'',ylabel:'τάση (V)',title:'Δίκτυο (διακεκομμένη) και λάμπα (συνεχής)',xticks:[0,10,20,30,40],series:[{pts:o.map(q=>[q[0],q[1]]),color:C.mut(),dash:[5,4],w:1.4},{pts:o.map(q=>[q[0],q[2]]),color:C.acc(),w:2.6}],vlines:[{x:cur,color:C.hot(),dash:[]}]},
+   {xmin:0,xmax:40,ymin:-60,ymax:60,xlabel:'t (ms)',ylabel:'V_C (V)',title:'Τάση πυκνωτή C (το DIAC άγει στα ±32 V)',xticks:[0,10,20,30,40],series:[{pts:o.map(q=>[q[0],q[3]]),color:C.warn(),w:2.2}],hlines:[{y:32,label:'+32 V'},{y:-32,label:'−32 V'}],vlines:[{x:cur,color:C.hot(),dash:[]}]}]});}}
 new ResizeObserver(redraw).observe($('cv'));
 let lt=performance.now();function loop(t){const dt=(t-lt)/1000;lt=t;
  if(tab===1){const before=gateT>0||breakT>0;gateT=Math.max(0,gateT-dt);breakT=Math.max(0,breakT-dt);if(before)update();}
- if(tab===2&&S.sA){phase=(phase+dt*0.5)%1;const th=phase*2*Math.PI,ph=th%Math.PI;const on=ph>=S.a;S.d.t[0].classList.toggle('onf',on&&th<Math.PI);S.d.t[1].classList.toggle('onf',on&&th>=Math.PI);setFlow(S.f,on?(th<Math.PI?0.05:-0.05):0);}
+ if(tab===2&&S.D){if(!S.paused)phase=(phase+dt/4)%1;const k=Math.min(S.D.out.length-1,Math.floor(phase*S.D.out.length));const q=S.D.out[k];const on=q[2]!==0;
+  S.d.t[0].classList.toggle('onf',on&&q[1]>0);S.d.t[1].classList.toggle('onf',on&&q[1]<0);
+  const fire=Math.abs(q[3])>27&&!on;S.dc.t1.classList.toggle('onf',fire&&q[3]>0);S.dc.t2.classList.toggle('onf',fire&&q[3]<0);
+  setFlow(S.f,on?(q[1]>0?0.05:-0.05):0);setFlow(S.fT,on?0:q[1]/1e5);redraw();}
  requestAnimationFrame(loop);}requestAnimationFrame(loop);
 tabs(0);
 </script>
